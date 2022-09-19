@@ -1,0 +1,27 @@
++-----------------------------------+
+|      |         ^ y        |       |
+|      |         |          |       |
+|                |                  |
+|       ---------+--------> x       |
+|               0|                  |
+|                |                  |
+|                |                  |
++-----------------------------------+
+
+     pxc    c
+ac = --- = --
+      ms   sc
+
+                c * ms
+pxc = ac * ms = ------
+                  sc
+
+              pxc * sc
+c = ac * sc = --------
+                 ms
+
+ms  - min(width, height)
+ac  - absolute cordinate (minimal size unit)
+pxc - pixel cordinate
+c   - actual cordinate
+sx  - scale
