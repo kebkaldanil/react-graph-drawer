@@ -2,7 +2,6 @@ import { ceil } from "kamikoto00lib";
 import clamp from "kamikoto00lib/clamp";
 import { useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { Drawable } from "./Drawable";
 import { DrawableContextColor } from "./DrawableContext";
 import DrawerContext from "./DrawerContext";
 
@@ -15,7 +14,7 @@ export interface GraphGridLabelsProps {
   priority?: number;
 }
 
-function GraphGridLabels(props: GraphGridLabelsProps): Drawable {
+function GraphGridLabels(props: GraphGridLabelsProps) {
   const {
     zeroColor = "black",
     xAxisColor = zeroColor,
@@ -44,7 +43,7 @@ function GraphGridLabels(props: GraphGridLabelsProps): Drawable {
         const y = clamp(drawingZone.bottom, 0, drawingZone.top + cordInPixel.y * 20);
         printText(xAxisLabel, Vector2.of(drawingZone.right, y).minus(Vector2.of(10, 5).scale(cordInPixel)));
       }
-      for (let x = ceil(drawingZone.left, step.x); x <= drawingZone.right; x += step.x) {
+      for (let x = ceil(drawingZone.left - cordInPixel.x * 5, step.x); x <= drawingZone.right; x += step.x) {
         if (x === 0) {
           setColor(zeroColor);
         }
@@ -78,7 +77,7 @@ function GraphGridLabels(props: GraphGridLabelsProps): Drawable {
       }
     }
   }, priority);
-  return null as unknown as Drawable;
+  return null;
 }
 
 export default GraphGridLabels;

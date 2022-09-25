@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { Drawable } from "./Drawable";
 import { DrawableContextColor } from "./DrawableContext";
 import DrawerContext from "./DrawerContext";
 
@@ -13,7 +12,7 @@ export interface FunctionGraphProps {
   priority?: number;
 }
 
-function FunctionGraph(props: FunctionGraphProps): Drawable {
+function FunctionGraph(props: FunctionGraphProps) {
   const { useDrawable } = useContext(DrawerContext);
   const {
     function: func,
@@ -52,7 +51,7 @@ function FunctionGraph(props: FunctionGraphProps): Drawable {
       drawLine(...points[i]);
     }
   }, priority);
-  return null as unknown as Drawable;
+  return null;
 }
 
 export default FunctionGraph;

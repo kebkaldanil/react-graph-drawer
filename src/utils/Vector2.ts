@@ -17,12 +17,15 @@ export class Vector2 implements Iterable<number> {
     return Object.freeze(new Vector2(x, y));
   }
 
-  static from(src: Vector2Like) {
+  static from(src: Vector2Like | number) {
     if (src instanceof Vector2) {
       return src;
     }
     if (Array.isArray(src)) {
       return Vector2.of(...src);
+    }
+    if (typeof src === "number") {
+      return Vector2.of(src, src);
     }
     return Vector2.of(src.x, src.y);
   }
@@ -200,7 +203,7 @@ export class Vector2 implements Iterable<number> {
   }
 }
 
-export const useVector2 = (value: Vector2Like | number, onChanged?: (value: Vector2) => void) => {
+export const useVector2 = (value: Vector2Like | number) => {
   const ref = useRef(Vector2.NaV);
   if (typeof value === "number") {
     value = Vector2.of(value, value);
@@ -208,7 +211,5 @@ export const useVector2 = (value: Vector2Like | number, onChanged?: (value: Vect
   if (ref.current.equals(value)) {
     return ref.current;
   }
-  const res = ref.current = Vector2.from(value);
-  onChanged && onChanged(res);
-  return res;
+  return ref.current = Vector2.from(value);
 }

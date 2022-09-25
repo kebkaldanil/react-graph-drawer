@@ -19,3 +19,7 @@ export interface DrawableContext {
   canvasSize: Vector2;
   drawerContext: DrawerContext;
 }
+
+export interface Drawable {
+  remove(): void;
+}

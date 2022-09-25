@@ -2,37 +2,64 @@
 import React, { useLayoutEffect } from "react";
 import { atSameSide, Direction } from "../utils/Direction";
 import { LineSegment } from "../utils/LineSegment";
-import { Vector2 } from "../utils/Vector2";
+import { Vector2, Vector2Like } from "../utils/Vector2";
 import { ZeroAngleRect } from "../utils/ZeroAngleRect";
-import { DrawableContext, DrawableContextColor } from "./DrawableContext";
+import { Drawable, DrawableContext, DrawableContextColor } from "./DrawableContext";
 
 interface DrawerData {
   focus: Vector2;
   scale: Vector2;
+  deltaTime: number;
 }
 
 declare interface DrawerContext {
+  addDrawable(callback: DrawableCallback, priority?: number): Drawable;
   useDrawable(callback: DrawableCallback, priority?: number): void;
   update(data: DrawerData): DrawableContext;
   canvasRenderingContext2D?: CanvasRenderingContext2D;
   drawableContext?: DrawableContext;
+  setScale(value: Vector2Like | number): boolean;
+  setFocus(value: Vector2Like): boolean;
+  getScale(): Vector2;
+  getFocus(): Vector2;
   //clearQueue(): void;
 }
 
 const DrawerContext = React.createContext<DrawerContext>({
+  addDrawable() {
+    console.warn("Drawer context not found");
+    return {
+      remove: () => {},
+    };
+  },
   useDrawable() {
     console.warn("Drawer context not found");
   },
   update() {
     throw new Error("Context not found");
   },
-  //clearQueue() { }
+  setFocus() {
+    throw new Error("Context not found");
+  },
+  setScale() {
+    throw new Error("Context not found");
+  },
+  getScale() {
+    throw new Error("Context not found");
+  },
+  getFocus() {
+    throw new Error("Context not found");
+  },
 });
 
-export type DrawableCallback = (ctx: DrawableContext) => void;
+export type DrawableCallback = (ctx: DrawableContext, deltaTime: number) => void;
 
 export interface InitContextProps {
   canvasRenderingContext2D: CanvasRenderingContext2D;
+  getScale(): Vector2;
+  getFocus(): Vector2;
+  setScale(value: Vector2Like | number): boolean;
+  setFocus(value: Vector2Like): boolean;
 }
 
 interface DrawableObject {
@@ -41,7 +68,10 @@ interface DrawableObject {
 };
 
 export function initContext(props: InitContextProps): DrawerContext {
-  const { canvasRenderingContext2D: ctx } = props;
+  const {
+    canvasRenderingContext2D: ctx,
+    ...rest
+  } = props;
   const canvas = ctx.canvas;
   const canvasSize = Vector2.of(canvas.width, canvas.height);
   const minSide = Math.min(canvas.width, canvas.height);
@@ -51,7 +81,9 @@ export function initContext(props: InitContextProps): DrawerContext {
   const drawerContext: DrawerContext = {
     update,
     useDrawable,
+    addDrawable,
     canvasRenderingContext2D: ctx,
+    ...rest
   };
 
   return drawerContext;
@@ -59,7 +91,8 @@ export function initContext(props: InitContextProps): DrawerContext {
   function update(data: DrawerData): DrawableContext {
     const {
       focus,
-      scale
+      scale,
+      deltaTime,
     } = data;
     const cordInPixel = scale.divide(canvasFactor);
     const graphHalfSize = canvasSize.scale(cordInPixel).divide(2);
@@ -86,7 +119,7 @@ export function initContext(props: InitContextProps): DrawerContext {
     drawerContext.drawableContext = drawableContext;
     clear();
     callbackQueue.forEach(({ callback }) => {
-      callback(drawableContext);
+      callback(drawableContext, deltaTime);
     });
     return drawableContext;
 
@@ -190,27 +223,44 @@ export function initContext(props: InitContextProps): DrawerContext {
       return drawableContext;
     }
 
-    function printText(text: string, point: Vector2) {
+    interface PrintTextOptions {
+      horizontalAlign?: CanvasTextAlign;
+      verticalAlign?: CanvasTextBaseline;
+    }
+
+    function printText(text: string, point: Vector2, options: PrintTextOptions = {}) {
+      const {
+        horizontalAlign = "center",
+        verticalAlign = "middle",
+      } = options;
       const { x, y } = absoluteCordsToPixel(point);
+      ctx.textAlign = horizontalAlign;
+      ctx.textBaseline = verticalAlign;
       ctx.fillText(text, x, y);
       return drawableContext;
     }
   }
 
-  function useDrawable(callback: DrawableCallback, priority = 100) {
-    useLayoutEffect(() => {
-      const drawableObject = { callback, priority };
+  function addDrawable(callback: DrawableCallback, priority = 100) {
+    const drawableObject = { callback, priority };
       let index = 0;
       while (callbackQueue[index]?.priority < priority && index < callbackQueue.length) {
         index++;
       }
       callbackQueue.splice(index, 0, drawableObject);
-      return () => {
-        const index = callbackQueue.indexOf(drawableObject);
-        if (index >= 0) {
-          callbackQueue.splice(index, 1);
+      return {
+        remove: () => {
+          const index = callbackQueue.indexOf(drawableObject);
+          if (index >= 0) {
+            callbackQueue.splice(index, 1);
+          }
         }
       };
+  }
+
+  function useDrawable(callback: DrawableCallback, priority = 100) {
+    useLayoutEffect(() => {
+      return addDrawable(callback, priority).remove;
     });
   }
 }

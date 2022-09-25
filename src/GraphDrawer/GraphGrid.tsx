@@ -1,7 +1,6 @@
 import { ceil, round } from "kamikoto00lib";
 import { useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { Drawable } from "./Drawable";
 import { DrawableContextColor } from "./DrawableContext";
 import DrawerContext from "./DrawerContext";
 
@@ -11,7 +10,7 @@ export interface GraphGridProps {
   yAxisColor?: DrawableContextColor | null;
 }
 
-function GraphGrid(props: GraphGridProps): Drawable {
+function GraphGrid(props: GraphGridProps) {
   const {
     color = "lightgray",
     xAxisColor = "grey",
@@ -71,7 +70,7 @@ function GraphGrid(props: GraphGridProps): Drawable {
       drawLine(Vector2.of(0, drawingZone.top), Vector2.of(0, drawingZone.bottom));
     }
   }, -10);
-  return null as unknown as Drawable;
+  return null;
 }
 
 export default GraphGrid;

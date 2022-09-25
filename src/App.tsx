@@ -1,28 +1,30 @@
-import { lambertW, ssrt } from 'kamikoto00lib';
 import './App.css';
 import FunctionGraph from './GraphDrawer/FunctionGraph';
+import GraphDrawer from './GraphDrawer/GraphDrawer';
 import GraphGrid from './GraphDrawer/GraphGrid';
 import GraphGridLabels from './GraphDrawer/GraphGridLabels';
-import SmartGraphDrawer from './GraphDrawer/SmartGraphDrawer';
+import MouseMoveControl from './GraphDrawer/MouseMoveControl';
+import ScaleTarget from './GraphDrawer/ScaleTarget';
+import TouchscreenControl from './GraphDrawer/TouchscreenControl';
+import WheelControl from './GraphDrawer/WheelControl';
 
 function App() {
   return (
     <div className="App">
-      <SmartGraphDrawer
-        width={640}
-        height={480}
-        focus={[0, 0]}
-        scale={[10, 10]}
-        animationTime={0.1}
+      <GraphDrawer
+        size={[640, 480]}
+        defaultFocus={[0, 0]}
+        defaultScale={[10, 10]}
       >
-        <FunctionGraph function={(x) => Math.sin(x)} color="blue" />
-        <FunctionGraph function={(x) => x * Math.exp(x)} color="red" />
-        <FunctionGraph function={(x) => ssrt(x)} color="green" />
-        <FunctionGraph function={(x) => lambertW(x)} color="cyan" />
-        <FunctionGraph function={(x) => [Math.sqrt(x), -Math.sqrt(x)]} color="orange" />
+        <FunctionGraph function={(x) => x} color="#0f8" />
+        <FunctionGraph function={(x) => {const y = Math.sqrt(1-x*x);return[y, -y];}} color="red" />
         <GraphGrid />
         <GraphGridLabels />
-      </SmartGraphDrawer>
+        <MouseMoveControl />
+        <WheelControl />
+        <TouchscreenControl />
+        <ScaleTarget value={[10, 10]} animationTime={1} />
+      </GraphDrawer>
     </div>
   );
 }
