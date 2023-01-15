@@ -1,10 +1,11 @@
 import { ceil, round } from "kamikoto00lib";
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { DrawableContextColor } from "./DrawableContext";
+import { BaseDrawableProps } from "./Drawable";
+import { DrawableContext, DrawableContextColor } from "./DrawableContext";
 import DrawerContext from "./DrawerContext";
 
-export interface GraphGridProps {
+export interface GraphGridProps extends BaseDrawableProps {
   color?: DrawableContextColor;
   xAxisColor?: DrawableContextColor | null;
   yAxisColor?: DrawableContextColor | null;
@@ -14,10 +15,12 @@ function GraphGrid(props: GraphGridProps) {
   const {
     color = "lightgray",
     xAxisColor = "grey",
-    yAxisColor = "grey"
+    yAxisColor = "grey",
+    priority = -20,
   } = props;
   const drawerContext = useContext(DrawerContext);
-  drawerContext.useDrawable((ctx) => {
+  const { useDrawable } = drawerContext;
+  const drawableCB = useCallback((ctx: DrawableContext) => {
     const { setColor, drawLine, drawingZone, scale } = ctx;
     const t = Vector2.pow(10, Vector2.log(scale, 10).floor());
     const step = Vector2.from(scale.divide(t).toArray().map(t => {
@@ -37,10 +40,7 @@ function GraphGrid(props: GraphGridProps) {
         continue;
         //setColor(yAxisColor);
       }
-      drawLine(
-        Vector2.of(x, drawingZone.top),
-        Vector2.of(x, drawingZone.bottom)
-      );
+      drawLine([Vector2.of(x, drawingZone.top), Vector2.of(x, drawingZone.bottom)]);
       /*
       if (isCentral) {
         setColor(color);
@@ -52,10 +52,7 @@ function GraphGrid(props: GraphGridProps) {
         continue;
         //setColor(xAxisColor);
       }
-      drawLine(
-        Vector2.of(drawingZone.left, y),
-        Vector2.of(drawingZone.right, y)
-      );
+      drawLine([Vector2.of(drawingZone.left, y), Vector2.of(drawingZone.right, y)]);
       /*
       if (isCentral) {
         setColor(color);
@@ -63,13 +60,14 @@ function GraphGrid(props: GraphGridProps) {
     };
     if (xAxisColor) {
       setColor(xAxisColor);
-      drawLine(Vector2.of(drawingZone.left, 0), Vector2.of(drawingZone.right, 0));
+      drawLine([Vector2.of(drawingZone.left, 0), Vector2.of(drawingZone.right, 0)]);
     }
     if (yAxisColor) {
       setColor(yAxisColor);
-      drawLine(Vector2.of(0, drawingZone.top), Vector2.of(0, drawingZone.bottom));
+      drawLine([Vector2.of(0, drawingZone.top), Vector2.of(0, drawingZone.bottom)]);
     }
-  }, -10);
+  }, [color, xAxisColor, yAxisColor]);
+  useDrawable(drawableCB, priority);
   return null;
 }
 

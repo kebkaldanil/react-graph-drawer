@@ -1,17 +1,16 @@
-import { ceil } from "kamikoto00lib";
-import clamp from "kamikoto00lib/clamp";
-import { useContext } from "react";
+import { ceil, clamp } from "kamikoto00lib";
+import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { DrawableContextColor } from "./DrawableContext";
+import { BaseDrawableProps } from "./Drawable";
+import { DrawableContext, DrawableContextColor } from "./DrawableContext";
 import DrawerContext from "./DrawerContext";
 
-export interface GraphGridLabelsProps {
+export interface GraphGridLabelsProps extends BaseDrawableProps {
   zeroColor?: DrawableContextColor;
   xAxisColor?: DrawableContextColor | null;
   yAxisColor?: DrawableContextColor | null;
   xAxisLabel?: string | null;
   yAxisLabel?: string | null;
-  priority?: number;
 }
 
 function GraphGridLabels(props: GraphGridLabelsProps) {
@@ -21,10 +20,10 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
     yAxisColor = zeroColor,
     xAxisLabel = "X",
     yAxisLabel = "Y",
-    priority = -9,
+    priority = -10,
   } = props;
   const drawerContext = useContext(DrawerContext);
-  drawerContext.useDrawable((ctx) => {
+  const drawableCB = useCallback((ctx: DrawableContext) => {
     const { setColor, printText, drawingZone, scale, cordInPixel } = ctx;
     const t = Vector2.pow(10, Vector2.log(scale, 10).floor());
     const step = Vector2.from(scale.divide(t).toArray().map(t => {
@@ -49,7 +48,7 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
         }
         const y = clamp(drawingZone.bottom, 0, drawingZone.top + cordInPixel.y * 20);
         const labelPoint = Vector2.of(x, y).plus(Vector2.of(5, -5).scale(cordInPixel));
-        printText("" + +x.toFixed(10), labelPoint);
+        printText("" + +x.toFixed(11), labelPoint);
         if (x === 0) {
           setColor(xAxisColor);
         }
@@ -59,7 +58,7 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
       setColor(yAxisColor);
       if (yAxisLabel) {
         const x = clamp(drawingZone.left, 0, drawingZone.right - cordInPixel.x * 20);
-        printText(yAxisLabel, Vector2.of(x, drawingZone.top).plus(Vector2.of(5, 10).scale(cordInPixel)));
+        printText(yAxisLabel, Vector2.of(x, drawingZone.top).plus(Vector2.of(5, 10).scale(cordInPixel)), { horizontalAlign: "left" });
       }
       for (let y = ceil(drawingZone.bottom, step.y); y <= drawingZone.top; y += step.y) {
         if (y === 0) {
@@ -70,13 +69,14 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
         }
         const x = clamp(drawingZone.left, 0, drawingZone.right - cordInPixel.x * 20);
         const labelPoint = Vector2.of(x, y).plus(Vector2.of(5, -5).scale(cordInPixel));
-        printText("" + +y.toFixed(10), labelPoint);
+        printText("" + +y.toFixed(11), labelPoint, { horizontalAlign: "left" });
         if (y === 0) {
           setColor(yAxisColor);
         }
       }
     }
-  }, priority);
+  }, [xAxisColor, xAxisLabel, yAxisColor, yAxisLabel, zeroColor]);
+  drawerContext.useDrawable(drawableCB, priority);
   return null;
 }
 

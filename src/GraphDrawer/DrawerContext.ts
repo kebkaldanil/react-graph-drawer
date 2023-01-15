@@ -4,7 +4,7 @@ import { atSameSide, Direction } from "../utils/Direction";
 import { LineSegment } from "../utils/LineSegment";
 import { Vector2, Vector2Like } from "../utils/Vector2";
 import { ZeroAngleRect } from "../utils/ZeroAngleRect";
-import { Drawable, DrawableContext, DrawableContextColor } from "./DrawableContext";
+import { Drawable, DrawableContext, DrawableContextColor, PrintTextOptions } from "./DrawableContext";
 
 interface DrawerData {
   focus: Vector2;
@@ -13,19 +13,21 @@ interface DrawerData {
 }
 
 declare interface DrawerContext {
-  addDrawable(callback: DrawableCallback, priority?: number): Drawable;
-  useDrawable(callback: DrawableCallback, priority?: number): void;
-  update(data: DrawerData): DrawableContext;
+  addDrawable(callback: DrawableCallback, priority?: number | `${number}`): Readonly<Drawable>;
+  useDrawable(callback: DrawableCallback, priority?: number | `${number}`): void;
+  update(data: DrawerData): Readonly<DrawableCallback>;
   canvasRenderingContext2D?: CanvasRenderingContext2D;
   drawableContext?: DrawableContext;
-  setScale(value: Vector2Like | number): boolean;
-  setFocus(value: Vector2Like): boolean;
+  setScale(value: Readonly<Vector2Like> | number): boolean;
+  setFocus(value: Readonly<Vector2Like>): boolean;
   getScale(): Vector2;
   getFocus(): Vector2;
-  //clearQueue(): void;
+  updateCanvasSize(value: Vector2): void;
 }
 
-const DrawerContext = React.createContext<DrawerContext>({
+export const defaultPriority = 100;
+
+const DrawerContext = React.createContext<DrawerContext>(Object.freeze({
   addDrawable() {
     console.warn("Drawer context not found");
     return {
@@ -50,9 +52,12 @@ const DrawerContext = React.createContext<DrawerContext>({
   getFocus() {
     throw new Error("Context not found");
   },
-});
+  updateCanvasSize() {
+    throw new Error("Context not found");
+  }
+}));
 
-export type DrawableCallback = (ctx: DrawableContext, deltaTime: number) => void;
+export type DrawableCallback = (ctx: Readonly<DrawableContext>, deltaTime: number) => void;
 
 export interface InitContextProps {
   canvasRenderingContext2D: CanvasRenderingContext2D;
@@ -67,28 +72,35 @@ interface DrawableObject {
   priority: number;
 };
 
-export function initContext(props: InitContextProps): DrawerContext {
+export function initContext(props: InitContextProps): Readonly<DrawerContext> {
   const {
     canvasRenderingContext2D: ctx,
     ...rest
   } = props;
   const canvas = ctx.canvas;
-  const canvasSize = Vector2.of(canvas.width, canvas.height);
-  const minSide = Math.min(canvas.width, canvas.height);
-  const canvasFactor = Vector2.of(minSide, -minSide);
+  let canvasSize = Vector2.of(canvas.width, canvas.height);
+  const minSide = Math.min(canvasSize.x, canvasSize.y);//Math.min(canvas.width, canvas.height);
+  let canvasFactor = Vector2.of(minSide, -minSide);
 
-  let callbackQueue: DrawableObject[] = [];
+  const callbackQueue: DrawableObject[] = [];
   const drawerContext: DrawerContext = {
     update,
     useDrawable,
     addDrawable,
+    updateCanvasSize,
     canvasRenderingContext2D: ctx,
     ...rest
   };
 
   return drawerContext;
 
-  function update(data: DrawerData): DrawableContext {
+  function updateCanvasSize(value: Vector2) {
+    canvasSize = value;
+    const minSide = Math.min(canvasSize.x, canvasSize.y);//Math.min(canvas.width, canvas.height);
+    canvasFactor = Vector2.of(minSide, -minSide);
+  }
+
+  function update(data: DrawerData): Readonly<DrawableContext> {
     const {
       focus,
       scale,
@@ -101,7 +113,7 @@ export function initContext(props: InitContextProps): DrawerContext {
       focus.minus(graphHalfSize),
     );
     const drawableCorner = Vector2.of(drawingZone.left, drawingZone.top);
-    const drawableContext: DrawableContext = {
+    const drawableContext: Readonly<DrawableContext> = Object.freeze({
       scale,
       focus,
       cordInPixel,
@@ -114,12 +126,16 @@ export function initContext(props: InitContextProps): DrawerContext {
       absoluteCordsToPixel,
       pixelCordsToAbsolute,
       drawerContext,
-    };
+    });
     
     drawerContext.drawableContext = drawableContext;
     clear();
     callbackQueue.forEach(({ callback }) => {
-      callback(drawableContext, deltaTime);
+      try {
+        callback(drawableContext, deltaTime);
+      } catch (e) {
+        console.error(e);
+      }
     });
     return drawableContext;
 
@@ -164,7 +180,7 @@ export function initContext(props: InitContextProps): DrawerContext {
       return value.scale(cordInPixel).plus(drawableCorner) as T;
     }
 
-    function drawLine(...points: Vector2[]): DrawableContext {
+    function drawLine(points: Vector2[]): DrawableContext {
       if (!points.length) {
         console.warn("Nothing to draw!");
         return drawableContext;
@@ -223,11 +239,6 @@ export function initContext(props: InitContextProps): DrawerContext {
       return drawableContext;
     }
 
-    interface PrintTextOptions {
-      horizontalAlign?: CanvasTextAlign;
-      verticalAlign?: CanvasTextBaseline;
-    }
-
     function printText(text: string, point: Vector2, options: PrintTextOptions = {}) {
       const {
         horizontalAlign = "center",
@@ -241,8 +252,8 @@ export function initContext(props: InitContextProps): DrawerContext {
     }
   }
 
-  function addDrawable(callback: DrawableCallback, priority = 100) {
-    const drawableObject = { callback, priority };
+  function addDrawable(callback: DrawableCallback, priority: number | `${number}` = defaultPriority) {
+    const drawableObject = { callback, priority: +priority };
       let index = 0;
       while (callbackQueue[index]?.priority < priority && index < callbackQueue.length) {
         index++;
@@ -258,10 +269,11 @@ export function initContext(props: InitContextProps): DrawerContext {
       };
   }
 
-  function useDrawable(callback: DrawableCallback, priority = 100) {
+  function useDrawable(callback: DrawableCallback, _priority: number | `${number}` = defaultPriority) {
+    const priority = +_priority;
     useLayoutEffect(() => {
       return addDrawable(callback, priority).remove;
-    });
+    }, [callback, priority]);
   }
 }
 

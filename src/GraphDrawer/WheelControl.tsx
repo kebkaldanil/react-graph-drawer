@@ -3,7 +3,7 @@ import { Vector2 } from "../utils/Vector2";
 import DrawerContext from "./DrawerContext";
 
 export type WheelControlProps = {
-  wheelSpeed?: number;
+  wheelSpeed?: number | `${number}`;
 } & ({
   zoomFromMouse?: true;
   zoomFromCenter?: false;
@@ -14,8 +14,9 @@ export type WheelControlProps = {
 
 const WheelControl = (props: WheelControlProps) => {
   const {
-    wheelSpeed = 3,
+    wheelSpeed: wheelSpeedProp = 3,
   } = props;
+  const wheelSpeed = +wheelSpeedProp;
   const zoomFromMouse = props.zoomFromMouse ?? !props.zoomFromCenter;
   const drawerContext = useContext(DrawerContext);
   useEffect(() => {
@@ -26,6 +27,7 @@ const WheelControl = (props: WheelControlProps) => {
         setScale,
       } = drawerContext;
       if (drawableContext) {
+        ev.preventDefault();
         const scale = getScale();
         const delta = ev.deltaY / -10000 * wheelSpeed;
         const newScale = Vector2.pow(10, Vector2.log(scale, 10).minus([delta, delta])).clamp([1e-10, 1e-10], [1e20, 1e20]);

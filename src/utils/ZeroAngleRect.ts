@@ -35,13 +35,13 @@ export class ZeroAngleRect implements ZeroAngleRectLike {
     if (Array.isArray(src)) {
       return new ZeroAngleRect(...src);
     }
-    return new ZeroAngleRect(src.left, src.right, src.top, src.bottom);
+    return new ZeroAngleRect(+src.left, +src.right, +src.top, +src.bottom);
   }
 
   static byPoints(p1: Vector2Like, p2: Vector2Like) {
     p1 = Vector2.like(p1);
     p2 = Vector2.like(p2);
-    return new ZeroAngleRect(p1.x, p2.x, p1.y, p2.y);
+    return new ZeroAngleRect(+p1.x, +p2.x, +p1.y, +p2.y);
   }
 
   testInside(point: Vector2Like) {

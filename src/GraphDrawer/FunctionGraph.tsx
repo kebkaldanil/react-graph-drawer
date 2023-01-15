@@ -1,31 +1,42 @@
-import { useContext } from "react";
+import { round } from "kamikoto00lib";
+import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { DrawableContextColor } from "./DrawableContext";
-import DrawerContext from "./DrawerContext";
+import { BaseDrawableProps } from "./Drawable";
+import { DrawableContext, DrawableContextColor, ComputedProp } from "./DrawableContext";
+import DrawerContext, { defaultPriority } from "./DrawerContext";
 
 export type SimpleFunction = (x: number) => number;
 export type MultipleResultFunction = (x: number) => number[];
 
-export interface FunctionGraphProps {
+export interface FunctionGraphProps extends BaseDrawableProps {
   function: SimpleFunction | MultipleResultFunction;
   color?: DrawableContextColor;
-  priority?: number;
+  roundX?: boolean | number | `${number}` | ComputedProp;
 }
+
+const defaultRoundX = (ctx: DrawableContext) => {
+  const log10 = Math.floor(Math.log10(ctx.scale.x / ctx.canvasSize.x));
+  const res = Math.pow(10, log10);
+  return res;
+};
 
 function FunctionGraph(props: FunctionGraphProps) {
   const { useDrawable } = useContext(DrawerContext);
   const {
     function: func,
     color = "black",
-    priority = 100,
+    priority = defaultPriority,
+    roundX: roundX_prop = false,
   } = props;
-  useDrawable((ctx) => {
+  const roundXSrc = roundX_prop === true ? defaultRoundX : typeof roundX_prop === "function" ? roundX_prop : +roundX_prop;
+  const drawableCB = useCallback((ctx: DrawableContext) => {
     const { setColor, drawLine, canvasSize, cordInPixel: realScale, drawingZone } = ctx;
     setColor(color);
+    const roundX = typeof roundXSrc === "function" ? roundXSrc(ctx) : roundXSrc;
     const points: Vector2[][] = [[]];
     for (let xp = 0; xp < canvasSize.x; xp++) {
       const x = xp * realScale.x + drawingZone.left;
-      const y = func(x);
+      const y = func(roundX ? round(x, roundX) : x);
       const ys = Array.isArray(y) ? y : [y];
       while (points.length < ys.length) {
         points.push([]);
@@ -47,10 +58,12 @@ function FunctionGraph(props: FunctionGraphProps) {
         //points.push(Vector2.NaV);
      // }
     }
+    //console.log(points);
     for (let i = 0; i < points.length; i++) {
-      drawLine(...points[i]);
+      drawLine(points[i]);
     }
-  }, priority);
+  }, [color, func, roundXSrc]);
+  useDrawable(drawableCB, +priority);
   return null;
 }
 

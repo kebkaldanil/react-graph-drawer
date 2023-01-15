@@ -5,9 +5,15 @@ import DrawerContext from "./DrawerContext";
 
 export type DrawableContextColor = CanvasRenderingContext2D["strokeStyle"] & CanvasRenderingContext2D["fillStyle"] | Tuple<3 | 4, number>;
 
+
+export interface PrintTextOptions {
+  horizontalAlign?: CanvasTextAlign;
+  verticalAlign?: CanvasTextBaseline;
+}
+
 export interface DrawableContext {
-  drawLine(...point: Vector2[]): this;
-  printText(text: string, point: Vector2): this;
+  drawLine(points: Vector2[]): this;
+  printText(text: string, point: Vector2, options?: PrintTextOptions): this;
   setColor(color: DrawableContextColor): this;
   clear(): this;
   absoluteCordsToPixel<T extends Vector2 | Vector2[]>(value: T): T;
@@ -23,3 +29,5 @@ export interface DrawableContext {
 export interface Drawable {
   remove(): void;
 }
+
+export type ComputedProp = (ctx: DrawableContext) => number;

@@ -1,11 +1,9 @@
 .App {
-  width: fit-content;
   height: fit-content;
-  text-align: left;
+  text-align: center;
   padding: 6px;
-  background: linear-gradient(to bottom right, yellow, lightgreen);
 }
 
 .App canvas {
-  background-color: white;
+  border: 1px solid black;
 }

@@ -4,7 +4,7 @@ import DrawerContext from "./DrawerContext";
 
 interface TouchData {
   center: Vector2;
-  distance?: number;
+  touchesDelta?: Vector2;
 }
 
 export interface TouchscreenControlProps {
@@ -29,8 +29,8 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
           const touch1 = Vector2.of(touches[0].pageX, touches[0].pageY);
           const touch2 = Vector2.of(touches[1].pageX, touches[1].pageY);
           const center = touch1.plus(touch2).divide(2);
-          const distance = touch1.minus(touch2).length();
-          lastTouchesDataRef.current = { center, distance };
+          const touchesDelta = touch1.minus(touch2).abs();
+          lastTouchesDataRef.current = { center, touchesDelta };
           ev.preventDefault();
           break;
         }
@@ -57,24 +57,20 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
             const touch1 = Vector2.of(touches[0].pageX, touches[0].pageY);
             const touch2 = Vector2.of(touches[1].pageX, touches[1].pageY);
             const center = touch1.plus(touch2).divide(2);
-            const distance = touch1.minus(touch2).length();
+            const touchesDelta = touch1.minus(touch2).abs();
             if (lastTouchesData) {
               const focus = getFocus();
-              const delta = center.minus(lastTouchesData.center).scale(drawableContext.cordInPixel).inverse();
-              setFocus(focus.plus(delta));
-              if (lastTouchesData.distance) {
+              const focusDelta = center.minus(lastTouchesData.center).scale(drawableContext.cordInPixel).inverse();
+              setFocus(focus.plus(focusDelta));
+              if (lastTouchesData.touchesDelta) {
                 const { getScale, setScale } = drawerContext;
                 const scale = getScale();
-                const delta = Math.log(distance / lastTouchesData.distance);
-                const newScale = Vector2.pow(10, Vector2.log(scale, 10).minus([delta, delta])).clamp([1e-10, 1e-10], [1e20, 1e20]);
-                const deltaScale = newScale.divide(scale);
-                const actualCenter = drawableContext.pixelCordsToAbsolute(center);
-                const newFocus = actualCenter.minus(actualCenter.minus(focus).scale(deltaScale));
+                const delta = touchesDelta.minus(lastTouchesData.touchesDelta).scale(drawableContext.cordInPixel).inverseX().multiply(2);
+                const newScale = scale.plus(delta);
                 setScale(newScale);
-                setFocus(newFocus);
               }
             }
-            lastTouchesDataRef.current = { center, distance };
+            lastTouchesDataRef.current = { center, touchesDelta };
             ev.preventDefault();
             break;
           }

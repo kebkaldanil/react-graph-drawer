@@ -24,7 +24,7 @@ const FocusTarget = (props: FocusTargetProps) => {
       const {
         getFocus,
         setFocus
-      } = drawerContext;
+      } = drawableContext.drawerContext;
       const focusChanged = setFocus(getFocus().moveTo(focusTarget, deltaTime * speed));
       if (!focusChanged) {
         drawable.remove();
