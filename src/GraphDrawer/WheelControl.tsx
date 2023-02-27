@@ -1,9 +1,12 @@
 import { useContext, useEffect } from "react";
-import { Vector2 } from "../utils/Vector2";
+import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
+import { DrawableContext } from "./Drawable";
 import DrawerContext from "./DrawerContext";
 
 export type WheelControlProps = {
   wheelSpeed?: number | `${number}`;
+  func?: (delta: Vector2, context: DrawableContext, ev: WheelEvent) => Vector2Like;
+  scaleRange?: [Vector2Like, Vector2Like];
 } & ({
   zoomFromMouse?: true;
   zoomFromCenter?: false;
@@ -12,6 +15,8 @@ export type WheelControlProps = {
   zoomFromCenter: true;
 });
 
+const defaultFunc = (delta: Vector2) => Vector2.of(delta.y - delta.x, delta.y);
+
 const WheelControl = (props: WheelControlProps) => {
   const {
     wheelSpeed: wheelSpeedProp = 3,
@@ -19,6 +24,10 @@ const WheelControl = (props: WheelControlProps) => {
   const wheelSpeed = +wheelSpeedProp;
   const zoomFromMouse = props.zoomFromMouse ?? !props.zoomFromCenter;
   const drawerContext = useContext(DrawerContext);
+  const [v1, v2] = props.scaleRange?.map(v => Vector2.like(v)) || [Vector2.of(1e-10, 1e-10), Vector2.of(1e20, 1e20)];
+  const rmin = useVector2(Vector2.of(Math.min(v1.x, v2.x), Math.min(v1.y, v2.y)));
+  const rmax = useVector2(Vector2.of(Math.max(v1.x, v2.x), Math.max(v1.y, v2.y)));
+  const func = props.func ?? defaultFunc;
   useEffect(() => {
     const wheelCallback = (ev: WheelEvent) => {
       const {
@@ -29,8 +38,8 @@ const WheelControl = (props: WheelControlProps) => {
       if (drawableContext) {
         ev.preventDefault();
         const scale = getScale();
-        const delta = ev.deltaY / -10000 * wheelSpeed;
-        const newScale = Vector2.pow(10, Vector2.log(scale, 10).minus([delta, delta])).clamp([1e-10, 1e-10], [1e20, 1e20]);
+        const delta = func(Vector2.of(ev.deltaX, ev.deltaY).multiply(wheelSpeed / 10000), drawableContext, ev);
+        const newScale = Vector2.pow(10, Vector2.log(scale, 10).plus(delta)).clamp(rmin, rmax);
         setScale(newScale);
         if (zoomFromMouse) {
           const { getFocus, setFocus } = drawerContext;
@@ -46,7 +55,7 @@ const WheelControl = (props: WheelControlProps) => {
     return () => {
       canvas.removeEventListener("wheel", wheelCallback);
     };
-  }, [drawerContext, wheelSpeed, zoomFromMouse]);
+  }, [drawerContext, wheelSpeed, zoomFromMouse, func, rmin, rmax]);
   return null;
 };
 

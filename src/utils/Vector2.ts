@@ -1,9 +1,10 @@
 import { ceil, floor, Like, round, clamp, Tuple } from "kamikoto00lib";
 import { useRef } from "react";
+import { Comparable } from "./Comparable";
 
-export type Vector2Like = Like<Vector2> | [number, number];
+export type Vector2Like = Readonly<Like<Vector2>> | [number, number];
 
-export class Vector2 implements Iterable<number> {
+export class Vector2 implements Iterable<number>, Comparable {
   readonly x: number;
   readonly y: number;
 
@@ -21,12 +22,16 @@ export class Vector2 implements Iterable<number> {
       return src;
     }
     if (Array.isArray(src)) {
-      return Vector2.of(...src);
+      return Vector2.of(src[0], src[1]);
     }
     if (typeof src === "number" || typeof src === "string") {
       return Vector2.of(src, src);
     }
     return Vector2.of(src.x, src.y);
+  }
+
+  static fromAngle(fi: number, r = 1) {
+    return Vector2.of(Math.sin(fi) * r, Math.cos(fi) * r);
   }
 
   static like<T extends Vector2Like = Like<Vector2>>(src: T): T extends Like<Vector2> ? T : Vector2 {
@@ -100,6 +105,23 @@ export class Vector2 implements Iterable<number> {
     return Vector2.of(Math.abs(+vec.x), Math.abs(+vec.y));
   }
 
+  static dot(a: Vector2Like, b: Vector2Like) {
+    a = Vector2.like(a);
+    b = Vector2.like(b);
+    return a.x * b.x + a.y * b.y;
+  }
+
+  static angleBetween(a: Vector2Like, b: Vector2Like) {
+    a = Vector2.like(a);
+    b = Vector2.like(b);
+    const det = a.x * b.y - a.y * b.x;
+    return Math.atan2(det, Vector2.dot(a, b));
+  }
+
+  static angleBetweenDeg(a: Vector2Like, b: Vector2Like) {
+    return this.angleBetween(a, b) * 180 / Math.PI;
+  }
+
   equals(val: Vector2Like) {
     return Vector2.equals(this, val);
   }
@@ -123,7 +145,8 @@ export class Vector2 implements Iterable<number> {
       return Vector2.of(this.x * val, this.y * val) as T extends Vector2Like ? number : Vector2;
     }
     const _val = Vector2.like(val);
-    return this.x * _val.y + this.y * _val.x as T extends Vector2Like ? number : Vector2;
+    return Vector2.dot(this, _val) as T extends Vector2Like ? number : Vector2;
+    //return this.x * _val.y + this.y * _val.x as T extends Vector2Like ? number : Vector2;
   }
 
   scale(factor: number | Vector2Like) {
@@ -234,22 +257,37 @@ export class Vector2 implements Iterable<number> {
     return this.y;
   }
 
-  [0]() {
+  get [0]() {
     return this.x;
   }
 
-  [1]() {
+  get [1]() {
     return this.y;
+  }
+
+  setX(x: number) {
+    if (Object.is(x, this.x)) {
+      return this;
+    }
+    return Vector2.of(x, this.y);
+  }
+
+  setY(y: number) {
+    if (Object.is(y, this.y)) {
+      return this;
+    }
+    return Vector2.of(this.x, y);
   }
 }
 
-export const useVector2 = (value: Vector2Like | number | `${number}`) => {
-  const ref = useRef(Vector2.ZERO);
+export const useVector2 = (value: Vector2Like | number | `${number}`, onUpdate?: (value: Vector2) => void) => {
+  const ref = useRef() as React.MutableRefObject<Vector2>;
   if (typeof value === "number" || typeof value === "string") {
     value = Vector2.of(value, value);
   }
-  if (ref.current.is(value)) {
+  if (ref.current?.is(value)) {
     return ref.current;
   }
-  return ref.current = Vector2.from(value);
+  onUpdate && onUpdate(ref.current = Vector2.from(value));
+  return ref.current;
 }

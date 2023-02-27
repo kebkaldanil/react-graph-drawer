@@ -1,9 +1,12 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import { useDelta } from "../utils/delta";
+import { useUpdate } from "../utils/updateHook";
 import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
 import DrawerContext, { initContext } from "./DrawerContext";
 
-export type GraphDrawerProps = MainGraphDrawerProps & (
+type CanvasProps = React.DetailedHTMLProps<React.CanvasHTMLAttributes<HTMLCanvasElement>, HTMLCanvasElement>;
+
+export type GraphDrawerProps = MainGraphDrawerProps & CanvasProps & (
   {
     size?: Vector2Like;
     width?: undefined;
@@ -26,6 +29,7 @@ interface MainGraphDrawerProps {
 interface GraphDrawerState {
   scale: Vector2;
   focus: Vector2;
+  size: Vector2;
 }
 
 const GraphDrawer = forwardRef((props: GraphDrawerProps, ref: React.ForwardedRef<DrawerContext>) => {
@@ -37,30 +41,37 @@ const GraphDrawer = forwardRef((props: GraphDrawerProps, ref: React.ForwardedRef
     defaultFocus = Vector2.ZERO,
     defaultScale = 10,
     updatePeriodMs = 16,
+    ...rest
   } = props;
-  const size = useVector2(sizeProp);
 
-  const stateRef = useRef<GraphDrawerState>();
+  
+  const sizePropVector2 = Vector2.from(sizeProp);
+  
+  const delta = useDelta();
+  const forceUpdate = useUpdate();
+  const stateRef = useRef() as React.MutableRefObject<GraphDrawerState>;
   const doUpdateRef = useRef(true);
-  if (stateRef.current === undefined) {
+  const [context, setContext] = useState<DrawerContext | null>(null);
+  const sizePropTarget = useVector2(
+    sizePropVector2.hasNaN() ? [+widthProp! || 300, +heightProp! || 100] : sizePropVector2,
+    (sizePropTarget) => stateRef.current && (stateRef.current.size = sizePropTarget)
+  );
+
+  if (!stateRef.current) {
     stateRef.current = {
       scale: Vector2.from(defaultScale),
       focus: Vector2.from(defaultFocus),
+      size: sizePropVector2,
     };
   }
-  const state = stateRef.current;
-
-  const [context, setContext] = useState<DrawerContext | null>(null);
-  const delta = useDelta();
-
-  const [width, height] = size.hasNaN() ? [widthProp || 300, heightProp || 150] : size.toArray();
 
   useImperativeHandle(ref, () => context!, [context]);
 
   const canvasRefFunc = (canvas: HTMLCanvasElement | null) => {
-    const canvasRenderingContext2D = canvas?.getContext("2d") || null;
+    const canvasRenderingContext2D = canvas?.getContext("2d");
     if (canvasRenderingContext2D && context?.canvasRenderingContext2D !== canvasRenderingContext2D) {
-      setContext(initContext({
+      const state = stateRef.current;
+      const context = initContext({
         canvasRenderingContext2D,
         getScale: () => state.scale,
         getFocus: () => state.focus,
@@ -77,20 +88,32 @@ const GraphDrawer = forwardRef((props: GraphDrawerProps, ref: React.ForwardedRef
           if (newFocus.equals(state.focus)) {
             return false;
           }
-          state.focus = Vector2.from(value);
+          state.focus = newFocus;
           return doUpdateRef.current = true;
         },
-      }));
+        getSize: () => state.size,
+        setSize: (value) => {
+          const newSize = Vector2.from(value);
+          if (newSize.is(state.size)) {
+            return false;
+          }
+          state.size = newSize;
+          forceUpdate();
+          return true;
+        },
+      });
+      setContext(context);
     }
   };
 
   doUpdateRef.current = true;
-  useEffect(() => {
+
+  useLayoutEffect(() => {
+    stateRef.current.size = sizePropTarget;
     if (context) {
-      context.updateCanvasSize(Vector2.of(+width, +height));
-      doUpdateRef.current = true;
+      context.onSizeUpdate(sizePropTarget);
     }
-  }, [context, height, width]);
+  }, [context, sizePropTarget]);
 
   useEffect(() => {
     if (context) {
@@ -98,7 +121,7 @@ const GraphDrawer = forwardRef((props: GraphDrawerProps, ref: React.ForwardedRef
         if (doUpdateRef.current) {
           doUpdateRef.current = false;
           context.update({
-            ...state,
+            ...stateRef.current,
             deltaTime: delta.get()
           });
         } else {
@@ -107,9 +130,9 @@ const GraphDrawer = forwardRef((props: GraphDrawerProps, ref: React.ForwardedRef
       }, updatePeriodMs);
       return () => clearInterval(interval);
     }
-  }, [context, delta, state, updatePeriodMs]);
-
-  return <canvas ref={canvasRefFunc} width={width} height={height}>
+  }, [context, delta, updatePeriodMs]);
+  const { size } = stateRef.current;
+  return <canvas ref={canvasRefFunc} width={size.x} height={size.y} {...rest}>
     {context && <DrawerContext.Provider value={context}>{children}</DrawerContext.Provider>}
   </canvas>
 });

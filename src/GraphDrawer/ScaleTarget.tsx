@@ -35,14 +35,14 @@ const ScaleTarget = (props: ScaleTargetProps) => {
         setScale,
       } = drawableContext.drawerContext;
       const scale = getScale();
-      const focusChanged = setScale(
+      const scaleChanged = setScale(
         noLogarithmicScale ?
           scale.moveTo(scaleTarget, deltaTime * speed) :
           Vector2.exp(
             Vector2.log(scale).moveTo(scaleTargetLog, deltaTime * speed)
           )
       );
-      if (!focusChanged) {
+      if (!scaleChanged) {
         drawable.remove();
       }
     }, Infinity);

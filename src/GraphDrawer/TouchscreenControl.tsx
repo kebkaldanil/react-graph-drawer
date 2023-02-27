@@ -7,11 +7,23 @@ interface TouchData {
   touchesDelta?: Vector2;
 }
 
+export enum ChangeScale {
+  No,
+  X,
+  Y,
+  OneFactor,
+  Both,
+}
+
 export interface TouchscreenControlProps {
+  changeScale?: boolean | ChangeScale;
 }
 
 const TouchscreenControl = (props: TouchscreenControlProps) => {
-  //const { } = props;
+  const {
+    changeScale: pchangeScale = ChangeScale.Both
+  } = props;
+  const changeScale = pchangeScale === true ? ChangeScale.Both : pchangeScale || ChangeScale.No;
   const drawerContext = useContext(DrawerContext);
   const lastTouchesDataRef = useRef<TouchData | null>(null);
   useEffect(() => {
@@ -62,12 +74,24 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
               const focus = getFocus();
               const focusDelta = center.minus(lastTouchesData.center).scale(drawableContext.cordInPixel).inverse();
               setFocus(focus.plus(focusDelta));
-              if (lastTouchesData.touchesDelta) {
+              if (lastTouchesData.touchesDelta && changeScale) {
                 const { getScale, setScale } = drawerContext;
                 const scale = getScale();
                 const delta = touchesDelta.minus(lastTouchesData.touchesDelta).scale(drawableContext.cordInPixel).inverseX().multiply(2);
-                const newScale = scale.plus(delta);
-                setScale(newScale);
+                switch (changeScale) {
+                  case ChangeScale.Both:
+                    setScale(scale.plus(delta));
+                    break;
+                  case ChangeScale.OneFactor:
+                    setScale(scale.plus(Vector2.from((delta.x + delta.y) / 2)));
+                    break;
+                  case ChangeScale.X:
+                    setScale(scale.plus(delta.setY(0)));
+                    break;
+                  case ChangeScale.Y:
+                    setScale(scale.plus(delta.setX(0)));
+                    break;
+                }
               }
             }
             lastTouchesDataRef.current = { center, touchesDelta };
@@ -88,7 +112,7 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
       canvas.removeEventListener("touchmove", touchMoveCallback);
       canvas.removeEventListener("touchend", touchEndCallback);
     };
-  }, [drawerContext]);
+  }, [drawerContext, changeScale]);
   return null;
 };
 

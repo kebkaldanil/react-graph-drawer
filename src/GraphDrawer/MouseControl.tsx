@@ -21,7 +21,7 @@ export interface MouseMoveControlProps {
   buttons?: MouseButton[] | MouseButton;
 }
 
-const MouseMoveControl = (props: MouseMoveControlProps) => {
+const MouseControl = (props: MouseMoveControlProps) => {
   const {
     buttons = MouseButton.Primary,
   } = props;
@@ -53,4 +53,4 @@ const MouseMoveControl = (props: MouseMoveControlProps) => {
   return null;
 };
 
-export default MouseMoveControl;
+export default MouseControl;

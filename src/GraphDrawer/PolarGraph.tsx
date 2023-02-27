@@ -1,7 +1,6 @@
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { BaseDrawableProps } from "./Drawable";
-import { ComputedProp, DrawableContextColor } from "./DrawableContext";
+import { BaseDrawableProps, ComputedProp, DrawableContextColor } from "./Drawable";
 import DrawerContext, { defaultPriority, DrawableCallback } from "./DrawerContext";
 import { SimpleFunction } from "./FunctionGraph";
 
@@ -46,7 +45,7 @@ const PolarGraph = (props: PolarGraphProps) => {
     const points: Vector2[] = [];
     for (let fi = fiStart; fi <= fiEnd; fi += fiStep) {
       const t = _function(fi);
-      points.push(Vector2.of(Math.cos(fi) * t * radius, Math.sin(fi) * t * radius));
+      points.push(Vector2.fromAngle(fi, radius * t));
     }
     setColor(color);
     drawLine(points);

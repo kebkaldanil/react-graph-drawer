@@ -2,7 +2,7 @@ import { ceil, clamp } from "kamikoto00lib";
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
 import { BaseDrawableProps } from "./Drawable";
-import { DrawableContext, DrawableContextColor } from "./DrawableContext";
+import { DrawableContext, DrawableContextColor } from "./Drawable";
 import DrawerContext from "./DrawerContext";
 
 export interface GraphGridLabelsProps extends BaseDrawableProps {

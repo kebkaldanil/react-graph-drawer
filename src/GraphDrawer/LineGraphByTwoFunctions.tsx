@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
 import { BaseDrawableProps } from "./Drawable";
-import { DrawableContextColor, ComputedProp } from "./DrawableContext";
+import { DrawableContextColor, ComputedProp } from "./Drawable";
 import DrawerContext, { defaultPriority, DrawableCallback } from "./DrawerContext";
 import { SimpleFunction } from "./FunctionGraph";
 

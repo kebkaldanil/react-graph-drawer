@@ -2,7 +2,7 @@ import { round } from "kamikoto00lib";
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
 import { BaseDrawableProps } from "./Drawable";
-import { DrawableContext, DrawableContextColor, ComputedProp } from "./DrawableContext";
+import { DrawableContext, DrawableContextColor, ComputedProp } from "./Drawable";
 import DrawerContext, { defaultPriority } from "./DrawerContext";
 
 export type SimpleFunction = (x: number) => number;

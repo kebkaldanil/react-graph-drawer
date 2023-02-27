@@ -2,8 +2,11 @@
   height: fit-content;
   text-align: center;
   padding: 6px;
+  height: calc(100vh - 12px);
 }
 
-.App canvas {
+.App .canvas {
   border: 1px solid black;
+  width: 100%;
+  height: 100%;
 }
