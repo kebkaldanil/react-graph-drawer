@@ -97,7 +97,7 @@ const GraphDrawer = forwardRef((props: GraphDrawerProps, ref: React.ForwardedRef
           if (newSize.is(state.size)) {
             return false;
           }
-          state.size = newSize;
+          context.onSizeUpdate(state.size = newSize);
           forceUpdate();
           return true;
         },

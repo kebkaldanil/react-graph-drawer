@@ -20,11 +20,12 @@ const defaultFunc = (delta: Vector2) => Vector2.of(delta.y - delta.x, delta.y);
 const WheelControl = (props: WheelControlProps) => {
   const {
     wheelSpeed: wheelSpeedProp = 3,
+    scaleRange
   } = props;
   const wheelSpeed = +wheelSpeedProp;
   const zoomFromMouse = props.zoomFromMouse ?? !props.zoomFromCenter;
   const drawerContext = useContext(DrawerContext);
-  const [v1, v2] = props.scaleRange?.map(v => Vector2.like(v)) || [Vector2.of(1e-10, 1e-10), Vector2.of(1e20, 1e20)];
+  const [v1, v2] = scaleRange?.map(v => Vector2.like(v)) || [Vector2.of(1e-10, 1e-10), Vector2.of(1e20, 1e20)];
   const rmin = useVector2(Vector2.of(Math.min(v1.x, v2.x), Math.min(v1.y, v2.y)));
   const rmax = useVector2(Vector2.of(Math.max(v1.x, v2.x), Math.max(v1.y, v2.y)));
   const func = props.func ?? defaultFunc;

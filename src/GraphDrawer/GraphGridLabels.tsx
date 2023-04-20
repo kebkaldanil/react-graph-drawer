@@ -1,7 +1,7 @@
 import { ceil, clamp } from "kamikoto00lib";
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { BaseDrawableProps } from "./Drawable";
+import { BaseDrawableProps, PrintTextOptions } from "./Drawable";
 import { DrawableContext, DrawableContextColor } from "./Drawable";
 import DrawerContext from "./DrawerContext";
 
@@ -36,40 +36,54 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
       return 1;
     }) as [number, number]).scale(t).divide(10);
     //const step = Math.pow(10, Math.round(Math.log10(Math.min(scale.x, scale.y)) - 1));
+    const textWidth = ("" + step.y).length + 1;
+    const numbersPrintTextOption: PrintTextOptions = {
+      verticalAlign: "bottom",
+      horizontalAlign: "left",
+      margin: 5,
+    };
+    let i: number;
     if (xAxisColor) {
       setColor(xAxisColor);
       if (xAxisLabel) {
+        const xAxisPrintTextOption: PrintTextOptions = {
+          ...numbersPrintTextOption,
+          horizontalAlign: "right",
+        };
         const y = clamp(drawingZone.bottom, 0, drawingZone.top + cordInPixel.y * 20);
-        printText(xAxisLabel, Vector2.of(drawingZone.right, y).minus(Vector2.of(10, 5).scale(cordInPixel)));
+        printText(xAxisLabel, Vector2.of(drawingZone.right, y), xAxisPrintTextOption);
       }
-      for (let x = ceil(drawingZone.left - cordInPixel.x * 5, step.x); x <= drawingZone.right; x += step.x) {
+      for (i = ceil(drawingZone.left - cordInPixel.x * 5, step.x); i < drawingZone.right - cordInPixel.x * textWidth * 10; i += step.x) {
+        const x = +i.toFixed(11);
         if (x === 0) {
           setColor(zeroColor);
         }
         const y = clamp(drawingZone.bottom, 0, drawingZone.top + cordInPixel.y * 20);
-        const labelPoint = Vector2.of(x, y).plus(Vector2.of(5, -5).scale(cordInPixel));
-        printText("" + +x.toFixed(11), labelPoint);
+        printText(x, [x, y], numbersPrintTextOption);
         if (x === 0) {
           setColor(xAxisColor);
         }
       }
     }
     if (yAxisColor) {
+      const yAxisPrintTextOption: PrintTextOptions = {
+        ...numbersPrintTextOption,
+        verticalAlign: "top",
+      };
       setColor(yAxisColor);
+      const x = clamp(drawingZone.left, 0, drawingZone.right - cordInPixel.x * textWidth * 7);
       if (yAxisLabel) {
-        const x = clamp(drawingZone.left, 0, drawingZone.right - cordInPixel.x * 20);
-        printText(yAxisLabel, Vector2.of(x, drawingZone.top).plus(Vector2.of(5, 10).scale(cordInPixel)), { horizontalAlign: "left" });
+        printText(yAxisLabel, [x, drawingZone.top], yAxisPrintTextOption);
       }
-      for (let y = ceil(drawingZone.bottom, step.y); y <= drawingZone.top; y += step.y) {
+      for (i = ceil(drawingZone.bottom, step.y); i < drawingZone.top + cordInPixel.y * 30; i += step.y) {
+        const y = +i.toFixed(11);
         if (y === 0) {
           if (xAxisColor) {
             continue;
           }
           setColor(zeroColor);
         }
-        const x = clamp(drawingZone.left, 0, drawingZone.right - cordInPixel.x * 20);
-        const labelPoint = Vector2.of(x, y).plus(Vector2.of(5, -5).scale(cordInPixel));
-        printText("" + +y.toFixed(11), labelPoint, { horizontalAlign: "left" });
+        printText(y, [x, y], numbersPrintTextOption);
         if (y === 0) {
           setColor(yAxisColor);
         }

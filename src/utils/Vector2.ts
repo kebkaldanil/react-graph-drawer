@@ -285,9 +285,11 @@ export const useVector2 = (value: Vector2Like | number | `${number}`, onUpdate?:
   if (typeof value === "number" || typeof value === "string") {
     value = Vector2.of(value, value);
   }
-  if (ref.current?.is(value)) {
-    return ref.current;
+  let tmp = ref.current;
+  if (tmp?.is(value)) {
+    return tmp;
   }
-  onUpdate && onUpdate(ref.current = Vector2.from(value));
-  return ref.current;
+  tmp = ref.current = Vector2.from(value);
+  onUpdate && onUpdate(tmp);
+  return tmp;
 }

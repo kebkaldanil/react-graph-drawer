@@ -5,6 +5,7 @@ import { LineSegment } from "../utils/LineSegment";
 import { Vector2, Vector2Like } from "../utils/Vector2";
 import { ZeroAngleRect } from "../utils/ZeroAngleRect";
 import { Drawable, DrawableContext, DrawableContextColor, PrintTextOptions } from "./Drawable";
+import { primitive } from "kamikoto00lib";
 
 interface DrawerData {
   focus: Vector2;
@@ -226,21 +227,40 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
       return drawableContext;
     }
 
-    function printText(text: string, point: Vector2Like, options: PrintTextOptions = {}) {
+    function printText(text: primitive, point: Vector2Like, options: PrintTextOptions = {}) {
       const {
         horizontalAlign = "center",
         verticalAlign = "middle",
+        font = "",
       } = options;
-      const { x, y } = absoluteCordsToPixel(Vector2.from(point));
+      const margin = Vector2.from(options.margin || 0);
+      let { x, y } = absoluteCordsToPixel(Vector2.from(point));
+      switch (horizontalAlign) {
+        case "right":
+        case "end":
+          x -= margin.x * Math.sign(cordInPixel.x);
+          break;
+        default:
+          x += margin.x * Math.sign(cordInPixel.x);
+      }
+      switch (verticalAlign) {
+        case "top":
+          y -= margin.y * Math.sign(cordInPixel.y);
+          break;
+        default:
+          y += margin.y * Math.sign(cordInPixel.y);
+      }
       ctx.textAlign = horizontalAlign;
       ctx.textBaseline = verticalAlign;
-      ctx.fillText(text, x, y);
+      ctx.font = font;
+      ctx.fillText("" + text, x, y);
       return drawableContext;
     }
   }
 
   function addDrawable(callback: DrawableCallback, priority: number | `${number}` = defaultPriority) {
-    const drawableObject = { callback, priority: +priority };
+    priority = +priority;
+    const drawableObject = { callback, priority };
     let index = 0;
     while (callbackQueue[index]?.priority < priority && index < callbackQueue.length) {
       index++;

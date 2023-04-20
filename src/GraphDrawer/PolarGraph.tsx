@@ -25,28 +25,36 @@ const PolarGraph = (props: PolarGraphProps) => {
   } = props;
   const radius = +radiusProp;
   const fiStepSrc = typeof fiStepProp === "string" ? +fiStepProp : fiStepProp;
+  const fiStartSrc = typeof fiStartProp === "string" ? +fiStartProp : fiStartProp;
+  const fiEndSrc = typeof fiEndProp === "string" ? +fiEndProp : fiEndProp;
   const fiStepFunc: ComputedProp = useCallback((ctx) => {
     if (fiStepSrc === undefined) {
-      return 0.1;
+      const { drawableContext } = drawerContext;
+      if (drawableContext === undefined) {
+        return 0.1;
+      }
+      const fiStart = typeof fiStartSrc === "function" ? fiStartSrc(drawableContext) : +fiStartSrc;
+      const fiEnd = typeof fiEndSrc === "function" ? fiEndSrc(drawableContext) : +fiEndSrc;
+      return (fiEnd - fiStart) / 180;
     }
     if (typeof fiStepSrc === "function") {
       return fiStepSrc(ctx);
     }
     return fiStepSrc;
   }, [fiStepSrc]);
-  const fiStartSrc = typeof fiStartProp === "string" ? +fiStartProp : fiStartProp;
-  const fiEndSrc = typeof fiEndProp === "string" ? +fiEndProp : fiEndProp;
   const drawerContext = useContext(DrawerContext);
   const drawableCB: DrawableCallback = useCallback((drawableContext) => {
-    const {setColor, drawLine} = drawableContext;
+    const { setColor, drawLine } = drawableContext;
     const fiStep = fiStepFunc(drawableContext);
     const fiStart = typeof fiStartSrc === "function" ? fiStartSrc(drawableContext) : +fiStartSrc;
     const fiEnd = typeof fiEndSrc === "function" ? fiEndSrc(drawableContext) : +fiEndSrc;
     const points: Vector2[] = [];
-    for (let fi = fiStart; fi <= fiEnd; fi += fiStep) {
-      const t = _function(fi);
-      points.push(Vector2.fromAngle(fi, radius * t));
-    }
+    let fi = fiStart;
+    points.push(Vector2.fromAngle(fi, radius * _function(fi)));
+    do {
+      fi += fiStep;
+      points.push(Vector2.fromAngle(fi, radius * _function(fi)));
+    } while (fi < fiEnd);
     setColor(color);
     drawLine(points);
   }, [_function, color, fiEndSrc, fiStartSrc, fiStepFunc, radius]);
