@@ -41,10 +41,12 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
       verticalAlign: "bottom",
       horizontalAlign: "left",
       margin: 5,
+      font: "10px"
     };
     let i: number;
     if (xAxisColor) {
       setColor(xAxisColor);
+      let end = drawingZone.right;
       if (xAxisLabel) {
         const xAxisPrintTextOption: PrintTextOptions = {
           ...numbersPrintTextOption,
@@ -52,8 +54,9 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
         };
         const y = clamp(drawingZone.bottom, 0, drawingZone.top + cordInPixel.y * 20);
         printText(xAxisLabel, Vector2.of(drawingZone.right, y), xAxisPrintTextOption);
+        end -= cordInPixel.x * textWidth * 10;
       }
-      for (i = ceil(drawingZone.left - cordInPixel.x * 5, step.x); i < drawingZone.right - cordInPixel.x * textWidth * 10; i += step.x) {
+      for (i = ceil(drawingZone.left - cordInPixel.x * 5, step.x); i < end; i += step.x) {
         const x = +i.toFixed(11);
         if (x === 0) {
           setColor(zeroColor);
@@ -72,10 +75,12 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
       };
       setColor(yAxisColor);
       const x = clamp(drawingZone.left, 0, drawingZone.right - cordInPixel.x * textWidth * 7);
+      let end = drawingZone.top;
       if (yAxisLabel) {
         printText(yAxisLabel, [x, drawingZone.top], yAxisPrintTextOption);
+        end += cordInPixel.y * 30;
       }
-      for (i = ceil(drawingZone.bottom, step.y); i < drawingZone.top + cordInPixel.y * 30; i += step.y) {
+      for (i = ceil(drawingZone.bottom, step.y); i < end; i += step.y) {
         const y = +i.toFixed(11);
         if (y === 0) {
           if (xAxisColor) {

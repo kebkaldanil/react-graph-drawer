@@ -6,7 +6,6 @@ import { SimpleFunction } from "./FunctionGraph";
 
 interface PolarGraphProps extends BaseDrawableProps {
   color?: DrawableContextColor;
-  radius?: number | `${number}`;
   fiStart?: number | `${number}` | ComputedProp;
   fiEnd?: number | `${number}` | ComputedProp;
   fiStep?: number | `${number}` | ComputedProp;
@@ -15,7 +14,6 @@ interface PolarGraphProps extends BaseDrawableProps {
 
 const PolarGraph = (props: PolarGraphProps) => {
   const {
-    radius: radiusProp = 1,
     fiStart: fiStartProp = 0,
     fiEnd: fiEndProp = +fiStartProp + Math.PI * 2,
     fiStep: fiStepProp,
@@ -23,7 +21,6 @@ const PolarGraph = (props: PolarGraphProps) => {
     color = "black",
     priority = defaultPriority,
   } = props;
-  const radius = +radiusProp;
   const fiStepSrc = typeof fiStepProp === "string" ? +fiStepProp : fiStepProp;
   const fiStartSrc = typeof fiStartProp === "string" ? +fiStartProp : fiStartProp;
   const fiEndSrc = typeof fiEndProp === "string" ? +fiEndProp : fiEndProp;
@@ -50,14 +47,14 @@ const PolarGraph = (props: PolarGraphProps) => {
     const fiEnd = typeof fiEndSrc === "function" ? fiEndSrc(drawableContext) : +fiEndSrc;
     const points: Vector2[] = [];
     let fi = fiStart;
-    points.push(Vector2.fromAngle(fi, radius * _function(fi)));
+    points.push(Vector2.fromAngle(fi, _function(fi)));
     do {
       fi += fiStep;
-      points.push(Vector2.fromAngle(fi, radius * _function(fi)));
+      points.push(Vector2.fromAngle(fi, _function(fi)));
     } while (fi < fiEnd);
     setColor(color);
     drawLine(points);
-  }, [_function, color, fiEndSrc, fiStartSrc, fiStepFunc, radius]);
+  }, [_function, color, fiEndSrc, fiStartSrc, fiStepFunc]);
   drawerContext.useDrawable(drawableCB, +priority);
   return null;
 };

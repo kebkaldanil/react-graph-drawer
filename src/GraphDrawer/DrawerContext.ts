@@ -171,7 +171,7 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
       if (Array.isArray(value)) {
         return value.map(absoluteCordsToPixel) as T;
       }
-      return value.minus(drawableCorner).divide(cordInPixel).round() as T;
+      return value.minus(drawableCorner).divide(cordInPixel) as T;
     }
 
     function pixelCordsToAbsolute<T extends Vector2 | Vector2[]>(value: T): T {
