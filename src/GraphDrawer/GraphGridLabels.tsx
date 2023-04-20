@@ -54,7 +54,7 @@ function GraphGridLabels(props: GraphGridLabelsProps) {
         };
         const y = clamp(drawingZone.bottom, 0, drawingZone.top + cordInPixel.y * 20);
         printText(xAxisLabel, Vector2.of(drawingZone.right, y), xAxisPrintTextOption);
-        end -= cordInPixel.x * textWidth * 10;
+        end -= cordInPixel.x * textWidth * 10 + 4;
       }
       for (i = ceil(drawingZone.left - cordInPixel.x * 5, step.x); i < end; i += step.x) {
         const x = +i.toFixed(11);
