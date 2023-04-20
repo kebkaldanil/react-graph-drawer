@@ -6,6 +6,7 @@ import { Vector2 } from "./utils/Vector2";
 
 export interface ClockProps extends BaseDrawableProps { }
 
+//Just made this for fun ¯\_(ツ)_/¯
 function Clock(props: ClockProps) {
   const { priority } = props;
   const { useDrawable } = useContext(DrawerContext);
