@@ -1,11 +1,16 @@
-/* eslint-disable @typescript-eslint/no-redeclare */
 import React, { useLayoutEffect } from "react";
 import { atSameSide, Direction } from "../utils/Direction";
 import { LineSegment } from "../utils/LineSegment";
 import { Vector2, Vector2Like } from "../utils/Vector2";
 import { ZeroAngleRect } from "../utils/ZeroAngleRect";
-import { Drawable, DrawableContext, DrawableContextColor, PrintTextOptions } from "./Drawable";
+import {
+  Drawable,
+  DrawableContext,
+  DrawableContextColor,
+  PrintTextOptions,
+} from "./Drawable";
 import { primitive } from "kamikoto00lib";
+import { NumberProp } from "../utils/number";
 
 interface DrawerData {
   focus: Vector2;
@@ -14,8 +19,11 @@ interface DrawerData {
 }
 
 declare interface DrawerContext {
-  addDrawable(callback: DrawableCallback, priority?: number | `${number}`): Readonly<Drawable>;
-  useDrawable(callback: DrawableCallback, priority?: number | `${number}`): void;
+  addDrawable(
+    callback: DrawableCallback,
+    priority?: NumberProp,
+  ): Readonly<Drawable>;
+  useDrawable(callback: DrawableCallback, priority?: NumberProp): void;
   update(data: DrawerData): Readonly<DrawableCallback>;
   canvasRenderingContext2D?: CanvasRenderingContext2D;
   drawableContext?: DrawableContext;
@@ -26,6 +34,7 @@ declare interface DrawerContext {
   getFocus(): Vector2;
   getSize(): Vector2;
   onSizeUpdate(value: Vector2): void;
+  setColor(style: DrawableContextColor): void;
 }
 
 export const defaultPriority = 100;
@@ -34,7 +43,7 @@ const DrawerContext = React.createContext<DrawerContext>(Object.freeze({
   addDrawable() {
     console.warn("Drawer context not found");
     return {
-      remove: () => { },
+      remove: () => {},
     };
   },
   useDrawable() {
@@ -63,10 +72,16 @@ const DrawerContext = React.createContext<DrawerContext>(Object.freeze({
   },
   onSizeUpdate() {
     throw new Error("Context not found");
-  }
+  },
+  setColor() {
+    throw new Error("Context not found");
+  },
 }));
 
-export type DrawableCallback = (ctx: Readonly<DrawableContext>, deltaTime: number) => void;
+export type DrawableCallback = (
+  ctx: Readonly<DrawableContext>,
+  deltaTime: number,
+) => void;
 
 export interface InitContextProps {
   canvasRenderingContext2D: CanvasRenderingContext2D;
@@ -81,7 +96,7 @@ export interface InitContextProps {
 interface DrawableObject {
   callback: DrawableCallback;
   priority: number;
-};
+}
 
 export function initContext(props: InitContextProps): Readonly<DrawerContext> {
   const {
@@ -98,16 +113,28 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
     useDrawable,
     addDrawable,
     onSizeUpdate,
+    setColor,
     canvasRenderingContext2D: ctx,
-    ...rest
+    ...rest,
   };
 
   return drawerContext;
 
+  function setColor(style: DrawableContextColor) {
+    if (Array.isArray(style)) {
+      if (style.length === 3) {
+        style = `rgb(${style.join()})`;
+      } else if (style.length === 4) {
+        style = `rgba(${style.join()})`;
+      }
+    }
+    ctx.strokeStyle = ctx.fillStyle = style;
+  }
+
   function onSizeUpdate(value: Vector2) {
     canvasSize = value;
     props.setSize(canvasSize);
-    const minSide = Math.min(canvasSize.x, canvasSize.y);//Math.min(canvas.width, canvas.height);
+    const minSide = Math.min(canvasSize.x, canvasSize.y);
     canvasFactor = Vector2.of(minSide, -minSide);
   }
 
@@ -133,7 +160,10 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
       clear,
       drawLine,
       printText,
-      setColor,
+      setColor(style: DrawableContextColor) {
+        drawerContext.setColor(style);
+        return this;
+      },
       absoluteCordsToPixel,
       pixelCordsToAbsolute,
       drawerContext,
@@ -155,18 +185,6 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
       return drawableContext;
     }
 
-    function setColor(style: DrawableContextColor) {
-      if (Array.isArray(style)) {
-        if (style.length === 3) {
-          style = `rgb(${style.join()})`;
-        } else if (style.length === 4) {
-          style = `rgba(${style.join()})`;
-        }
-      }
-      ctx.strokeStyle = ctx.fillStyle = style;
-      return drawableContext;
-    }
-
     function absoluteCordsToPixel<T extends Vector2 | Vector2[]>(value: T): T {
       if (Array.isArray(value)) {
         return value.map(absoluteCordsToPixel) as T;
@@ -184,11 +202,11 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
     function moveTo(point: Vector2) {
       const { x, y } = absoluteCordsToPixel(point);
       ctx.moveTo(x, y);
-    };
+    }
     function lineTo(point: Vector2) {
       const { x, y } = absoluteCordsToPixel(point);
       ctx.lineTo(x, y);
-    };
+    }
 
     function drawLine(points: Iterable<Vector2Like>): DrawableContext {
       let lastPoint: Vector2 | null = null;
@@ -204,10 +222,15 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
           const lastPointDir = drawingZone.getPointDirection(lastPoint);
           if (atSameSide(pointDir, lastPointDir)) {
             if (lastPointDir === Direction.inside) {
-              lineTo(point);
+              const seg = LineSegment.of(point, lastPoint).fitIn(drawingZone);
+              if (seg) {
+                lineTo(seg.p1);
+              }
             }
           } else {
-            const normal = LineSegment.from([lastPoint, point]);//.fitIn(drawingZone);
+            const normal = LineSegment.from([lastPoint, point]).fitIn(
+              drawingZone,
+            );
             if (normal) {
               const { p1, p2 } = normal;
               if (lastPointDir === Direction.inside) {
@@ -227,7 +250,11 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
       return drawableContext;
     }
 
-    function printText(text: primitive, point: Vector2Like, options: PrintTextOptions = {}) {
+    function printText(
+      text: primitive,
+      point: Vector2Like,
+      options: PrintTextOptions = {},
+    ) {
       const {
         horizontalAlign = "center",
         verticalAlign = "middle",
@@ -258,25 +285,39 @@ export function initContext(props: InitContextProps): Readonly<DrawerContext> {
     }
   }
 
-  function addDrawable(callback: DrawableCallback, priority: number | `${number}` = defaultPriority) {
+  function addDrawable(
+    callback: DrawableCallback,
+    priority: NumberProp = defaultPriority,
+  ) {
     priority = +priority;
     const drawableObject = { callback, priority };
     let index = 0;
-    while (callbackQueue[index]?.priority < priority && index < callbackQueue.length) {
+    while (
+      callbackQueue[index]?.priority < priority && index < callbackQueue.length
+    ) {
       index++;
     }
     callbackQueue.splice(index, 0, drawableObject);
+    const focus = rest.getFocus();
+    rest.setFocus(Vector2.NaV);
+    rest.setFocus(focus);
     return {
       remove: () => {
+        const focus = rest.getFocus();
+        rest.setFocus(Vector2.NaV);
+        rest.setFocus(focus);
         const index = callbackQueue.indexOf(drawableObject);
         if (index >= 0) {
           callbackQueue.splice(index, 1);
         }
-      }
+      },
     };
   }
 
-  function useDrawable(callback: DrawableCallback, _priority: number | `${number}` = defaultPriority) {
+  function useDrawable(
+    callback: DrawableCallback,
+    _priority: NumberProp = defaultPriority,
+  ) {
     const priority = +_priority;
     useLayoutEffect(() => {
       return addDrawable(callback, priority).remove;

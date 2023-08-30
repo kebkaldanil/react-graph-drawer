@@ -1,0 +1,19 @@
+.function-inputs {
+  border: 1px solid black;
+  border-radius: 2px;
+  margin: 1px -2px 0 0;
+}
+
+@media screen and (min-width: 700px) {
+  .function-inputs {
+    margin: 0 0 0 1px;
+  }
+}
+
+.function-input-form {
+  display: flex;
+}
+
+.function-input-form > * {
+  margin: 2px;
+}

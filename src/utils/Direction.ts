@@ -11,14 +11,11 @@ export enum Direction {
 }
 
 export function fix(val: Direction | number): Direction {
-  return (val & Direction.left && val & Direction.right)
-    | (val & Direction.top && val & Direction.bottom);
+  return (val & Direction.left && val & Direction.right) |
+    (val & Direction.top && val & Direction.bottom);
 }
 
 export function atSameSide(s1: Direction, s2: Direction) {
-  // 0101 0100 0111
-  // 0001 0000 0011
-  // 1101 1100 1111
   return (s1 === Direction.inside && s2 === Direction.inside) || (
     horisontalOnly(s1) && horisontalOnly(s1) === horisontalOnly(s2)
   ) || (
@@ -35,14 +32,12 @@ export function horisontalOnly(val: Direction): Direction {
 }
 
 export function findSameSide(s1: Direction, s2: Direction) {
-  // 0101 0100 0111
-  // 0001 0000 0011
-  // 1101 1100 1111
   const s1h = horisontalOnly(s1);
   const s2h = horisontalOnly(s2);
   const s1v = verticalOnly(s1);
   const s2v = verticalOnly(s2);
-  return (s1h === s2h ? s1h : Direction.inside) | (s1v === s2v ? s1v : Direction.inside);
+  return (s1h === s2h ? s1h : Direction.inside) |
+    (s1v === s2v ? s1v : Direction.inside);
 }
 
 export function oposite(val: Direction): Direction {

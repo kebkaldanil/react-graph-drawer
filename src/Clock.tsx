@@ -1,10 +1,14 @@
 import { useContext } from "react";
-import { BaseDrawableProps } from "./GraphDrawer/Drawable";
-import DrawerContext from "./GraphDrawer/DrawerContext";
-import { makeArray } from "./utils/makeArray";
-import { Vector2 } from "./utils/Vector2";
+import {
+  BaseDrawableProps,
+  DrawerContext,
+  makeArray,
+  PI,
+  PiInDegree,
+  Vector2,
+} from ".";
 
-export interface ClockProps extends BaseDrawableProps { }
+export interface ClockProps extends BaseDrawableProps {}
 
 //Just made this for fun ¯\_(ツ)_/¯
 function Clock(props: ClockProps) {
@@ -12,17 +16,18 @@ function Clock(props: ClockProps) {
   const { useDrawable } = useContext(DrawerContext);
   useDrawable((drawableContext) => {
     const date = new Date();
-    const timeInSeconds = (date.valueOf() - date.getTimezoneOffset() * 60_000) / 1000 % 43_200;
+    const timeInSeconds =
+      (date.valueOf() - date.getTimezoneOffset() * 60_000) / 1000 % 43_200;
     const hours = timeInSeconds / 3600;
     const minutes = hours * 60;
     const seconds = minutes * 60 | 0;
-    const hours_fi = hours * Math.PI / 6;
-    const minutes_fi = minutes * Math.PI / 30;
-    const seconds_fi = seconds * Math.PI / 30;
+    const hours_fi = hours * PI / 6;
+    const minutes_fi = minutes * PI / 30;
+    const seconds_fi = seconds * PI / 30;
     const { setColor, drawLine } = drawableContext;
     setColor("black");
     drawLine([[0, 0], Vector2.fromAngle(hours_fi, 0.5)]);
-    drawLine(makeArray(361, (i) => Vector2.fromAngle(i * Math.PI / 180, 1.2)));
+    drawLine(makeArray(361, (i) => Vector2.fromAngle(i * PiInDegree, 1.2)));
     setColor("gray");
     drawLine([Vector2.of(0, 0), Vector2.fromAngle(minutes_fi, 0.75)]);
     setColor("red");

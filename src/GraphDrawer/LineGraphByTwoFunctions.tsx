@@ -1,23 +1,29 @@
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
 import { BaseDrawableProps } from "./Drawable";
-import { DrawableContextColor, ComputedProp } from "./Drawable";
-import DrawerContext, { defaultPriority, DrawableCallback } from "./DrawerContext";
+import { ComputedProp, DrawableContextColor } from "./Drawable";
+import DrawerContext, {
+  defaultPriority,
+  DrawableCallback,
+} from "./DrawerContext";
 import { SimpleFunction } from "./FunctionGraph";
+import { NumberProp } from "../utils/number";
 
 interface LineGraphByTwoFunctionsPropsBase extends BaseDrawableProps {
   x: SimpleFunction;
   y: SimpleFunction;
   color?: DrawableContextColor;
-  tStep?: number | `${number}` | ComputedProp;
+  tStep?: NumberProp | ComputedProp;
 }
 
 interface ItRange {
-  tStart: number | `${number}` | ComputedProp;
-  tEnd: number | `${number}` | ComputedProp;
+  tStart: NumberProp | ComputedProp;
+  tEnd: NumberProp | ComputedProp;
 }
 
-export type LineGraphByTwoFunctionsProps = LineGraphByTwoFunctionsPropsBase & ({} | ItRange);
+export type LineGraphByTwoFunctionsProps =
+  | LineGraphByTwoFunctionsPropsBase
+  | (LineGraphByTwoFunctionsPropsBase & ItRange);
 
 const default_tStep = 0.01;
 
@@ -36,10 +42,16 @@ const LineGraphByTwoFunctions = (props: LineGraphByTwoFunctionsProps) => {
   const tEndSrc = typeof tEndProp === "string" ? +tEndProp : tEndProp;
   const drawerContext = useContext(DrawerContext);
   const drawableCB: DrawableCallback = useCallback((drawableContext) => {
-    const {setColor, drawLine} = drawableContext;
-    const tStep = typeof tStepSrc === "function" ? tStepSrc(drawableContext) : +tStepSrc;
-    const tStart = typeof tStartSrc === "function" ? tStartSrc(drawableContext) : +tStartSrc;
-    const tEnd = typeof tEndSrc === "function" ? tEndSrc(drawableContext) : +tEndSrc;
+    const { setColor, drawLine } = drawableContext;
+    const tStep = typeof tStepSrc === "function"
+      ? tStepSrc(drawableContext)
+      : +tStepSrc;
+    const tStart = typeof tStartSrc === "function"
+      ? tStartSrc(drawableContext)
+      : +tStartSrc;
+    const tEnd = typeof tEndSrc === "function"
+      ? tEndSrc(drawableContext)
+      : +tEndSrc;
     const points: Vector2[] = [];
     for (let t = tStart; t <= tEnd; t += tStep) {
       const x = xFunc(t);

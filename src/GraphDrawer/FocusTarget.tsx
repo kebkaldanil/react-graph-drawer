@@ -1,21 +1,24 @@
 import { useContext, useEffect } from "react";
 import { useVector2, Vector2Like } from "../utils/Vector2";
 import DrawerContext from "./DrawerContext";
+import { NumberProp } from "../utils/number";
 
 interface FocusTargetProps {
   value: Vector2Like;
-  animationTime?: number;
+  animationTime?: NumberProp;
 }
 
 const FocusTarget = (props: FocusTargetProps) => {
   const {
     value: focusProp,
-    animationTime = 0,
+    animationTime: animationTimeProp = 0,
   } = props;
   const drawerContext = useContext(DrawerContext);
   const focusTarget = useVector2(focusProp || drawerContext.getFocus());
+  const animationTime = +animationTimeProp;
   useEffect(() => {
-    const speed = focusTarget.minus(drawerContext.getFocus()).length() / animationTime;
+    const speed = focusTarget.minus(drawerContext.getFocus()).length() /
+      animationTime;
     if (animationTime === 0) {
       drawerContext.setFocus(focusTarget);
       return;
@@ -23,9 +26,11 @@ const FocusTarget = (props: FocusTargetProps) => {
     const drawable = drawerContext.addDrawable((drawableContext, deltaTime) => {
       const {
         getFocus,
-        setFocus
+        setFocus,
       } = drawableContext.drawerContext;
-      const focusChanged = setFocus(getFocus().moveTo(focusTarget, deltaTime * speed));
+      const focusChanged = setFocus(
+        getFocus().moveTo(focusTarget, deltaTime * speed),
+      );
       if (!focusChanged) {
         drawable.remove();
       }

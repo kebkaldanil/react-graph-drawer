@@ -1,18 +1,11 @@
 import { useContext, useEffect, useRef } from "react";
 import { Vector2 } from "../utils/Vector2";
 import DrawerContext from "./DrawerContext";
+import { ChangeScale } from "./ChangeScale";
 
 interface TouchData {
   center: Vector2;
   touchesDelta?: Vector2;
-}
-
-export enum ChangeScale {
-  No,
-  X,
-  Y,
-  OneFactor,
-  Both,
 }
 
 export interface TouchscreenControlProps {
@@ -21,9 +14,11 @@ export interface TouchscreenControlProps {
 
 const TouchscreenControl = (props: TouchscreenControlProps) => {
   const {
-    changeScale: pchangeScale = ChangeScale.Both
+    changeScale: pchangeScale = ChangeScale.Both,
   } = props;
-  const changeScale = pchangeScale === true ? ChangeScale.Both : pchangeScale || ChangeScale.No;
+  const changeScale = pchangeScale === true
+    ? ChangeScale.Both
+    : pchangeScale || ChangeScale.No;
   const drawerContext = useContext(DrawerContext);
   const lastTouchesDataRef = useRef<TouchData | null>(null);
   useEffect(() => {
@@ -57,7 +52,9 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
           case 1: {
             const touch = Vector2.of(touches[0].pageX, touches[0].pageY);
             if (lastTouchesData) {
-              const delta = touch.minus(lastTouchesData.center).scale(drawableContext.cordInPixel).inverse();
+              const delta = touch.minus(lastTouchesData.center).scale(
+                drawableContext.cordInPixel,
+              ).inverse();
               const focus = getFocus();
               setFocus(focus.plus(delta));
             }
@@ -72,12 +69,15 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
             const touchesDelta = touch1.minus(touch2).abs();
             if (lastTouchesData) {
               const focus = getFocus();
-              const focusDelta = center.minus(lastTouchesData.center).scale(drawableContext.cordInPixel).inverse();
+              const focusDelta = center.minus(lastTouchesData.center).scale(
+                drawableContext.cordInPixel,
+              ).inverse();
               setFocus(focus.plus(focusDelta));
               if (lastTouchesData.touchesDelta && changeScale) {
                 const { getScale, setScale } = drawerContext;
                 const scale = getScale();
-                const delta = touchesDelta.minus(lastTouchesData.touchesDelta).scale(drawableContext.cordInPixel).inverseX().multiply(2);
+                const delta = touchesDelta.minus(lastTouchesData.touchesDelta)
+                  .scale(drawableContext.cordInPixel).inverseX().multiply(2);
                 switch (changeScale) {
                   case ChangeScale.Both:
                     setScale(scale.plus(delta));
@@ -101,7 +101,7 @@ const TouchscreenControl = (props: TouchscreenControlProps) => {
         }
       }
     };
-    const touchEndCallback = (ev: TouchEvent) => {
+    const touchEndCallback = () => {
       lastTouchesDataRef.current = null;
     };
     canvas.addEventListener("touchstart", touchStartCallback);

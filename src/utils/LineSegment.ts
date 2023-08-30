@@ -6,10 +6,10 @@ import { ZeroAngleRect, ZeroAngleRectLike } from "./ZeroAngleRect";
 export type LineSegmentLike = Like<LineSegment> | [Vector2Like, Vector2Like];
 
 export class LineSegment {
-  protected constructor(readonly p1: Vector2, readonly p2: Vector2) { }
+  protected constructor(readonly p1: Vector2, readonly p2: Vector2) {}
 
   static of(p1: Vector2Like, p2: Vector2Like): LineSegment {
-    return Object.freeze(new LineSegment(Vector2.from(p1), Vector2.from(p2)));
+    return new LineSegment(Vector2.from(p1), Vector2.from(p2));
   }
 
   static from(src: LineSegmentLike) {
@@ -26,27 +26,31 @@ export class LineSegment {
   fitIn(obj: ZeroAngleRectLike) {
     const rect = ZeroAngleRect.from(obj);
     let { p1, p2 } = this;
-    const p1d = rect.getPointDirection(p1);
-    const p2d = rect.getPointDirection(p2);
+    const p1d = rect.getPointDirection(p1, true);
+    const p2d = rect.getPointDirection(p2, true);
     if (p1d === Direction.inside && p2d === Direction.inside) {
       return this;
     }
+    const diff = p2.minus(p1);
     if (p1d !== Direction.inside) {
-      const diff = p2.minus(p1);
       const horisontal = horisontalOnly(p1d);
       const vertical = verticalOnly(p1d);
       let p1n: Vector2 | null = null;
       if (horisontal !== Direction.inside) {
-        const tdif = diff.scaleToX(p2.x - rect[horisontal === Direction.left ? "left" : "right"]);
-        p1n = p2.plus(tdif);
-        if (!rect.testInside(p1n)) {
+        const tdif = diff.scaleToX(
+          p2.x - rect[horisontal === Direction.left ? "left" : "right"],
+        );
+        p1n = p2.minus(tdif);
+        if (!rect.testOnSide(p1n)) {
           p1n = null;
         }
       }
       if (p1n === null && vertical !== Direction.inside) {
-        const tdif = diff.scaleToY(p2.y - rect[vertical === Direction.bottom ? "bottom" : "top"]);
-        p1n = p2.plus(tdif);
-        if (!rect.testInside(p1n)) {
+        const tdif = diff.scaleToY(
+          p2.y - rect[vertical === Direction.bottom ? "bottom" : "top"],
+        );
+        p1n = p2.minus(tdif);
+        if (!rect.testOnSide(p1n)) {
           p1n = null;
         }
       }
@@ -57,21 +61,24 @@ export class LineSegment {
       }
     }
     if (p2d !== Direction.inside) {
-      const diff = p1.minus(p2);
       const horisontal = horisontalOnly(p2d);
       const vertical = verticalOnly(p2d);
       let p2n: Vector2 | null = null;
       if (horisontal !== Direction.inside) {
-        let tdif = diff.scaleToX(p1.x - rect[horisontal === Direction.left ? "left" : "right"]);
+        const tdif = diff.scaleToX(
+          rect[horisontal === Direction.left ? "left" : "right"] - p1.x,
+        );
         p2n = p1.plus(tdif);
-        if (!rect.testInside(p2n)) {
+        if (!rect.testOnSide(p2n)) {
           p2n = null;
         }
       }
       if (p2n === null && vertical !== Direction.inside) {
-        let tdif = diff.scaleToY(p1.y - rect[vertical === Direction.bottom ? "bottom" : "top"]);
+        const tdif = diff.scaleToY(
+          rect[vertical === Direction.bottom ? "bottom" : "top"] - p1.y,
+        );
         p2n = p1.plus(tdif);
-        if (!rect.testInside(p2n)) {
+        if (!rect.testOnSide(p2n)) {
           p2n = null;
         }
       }

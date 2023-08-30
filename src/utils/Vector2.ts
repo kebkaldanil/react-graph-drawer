@@ -1,6 +1,7 @@
-import { ceil, floor, Like, round, clamp, Tuple } from "kamikoto00lib";
+import { ceil, clamp, floor, Like, round, Tuple } from "kamikoto00lib";
 import { useRef } from "react";
 import { Comparable } from "./Comparable";
+import { NumberProp, PiInDegree } from "./number";
 
 export type Vector2Like = Readonly<Like<Vector2>> | [number, number];
 
@@ -8,16 +9,16 @@ export class Vector2 implements Iterable<number>, Comparable {
   readonly x: number;
   readonly y: number;
 
-  protected constructor(x: number | `${number}`, y: number | `${number}`) {
+  protected constructor(x: NumberProp, y: NumberProp) {
     this.x = +x;
     this.y = +y;
   }
 
-  static of(x: number | `${number}`, y: number | `${number}`): Vector2 {
-    return Object.freeze(new Vector2(x, y));
+  static of(x: NumberProp, y: NumberProp): Vector2 {
+    return new Vector2(x, y);
   }
 
-  static from(src: Vector2Like | number | `${number}`) {
+  static from(src: Vector2Like | NumberProp) {
     if (src instanceof Vector2) {
       return src;
     }
@@ -34,14 +35,18 @@ export class Vector2 implements Iterable<number>, Comparable {
     return Vector2.of(Math.sin(fi) * r, Math.cos(fi) * r);
   }
 
-  static like<T extends Vector2Like = Like<Vector2>>(src: T): T extends Like<Vector2> ? T : Vector2 {
+  static like<const T extends Vector2Like = Like<Vector2>>(
+    src: T,
+  ): T extends Like<Vector2> ? T : Vector2 {
     if (Array.isArray(src)) {
-      return Vector2.of(...src as Tuple<2, number>) as any;// { x: +src[0], y: +src[1] } as any;
+      return Vector2.of(...src as Tuple<2, number>) as T extends Like<Vector2>
+        ? T
+        : Vector2;
     }
     if (typeof src.x === "number" && typeof src.y === "number") {
-      return src as any;
+      return src as T extends Like<Vector2> ? T : Vector2;
     }
-    return Vector2.of(src.x, src.y) as any;
+    return Vector2.of(src.x, src.y) as T extends Like<Vector2> ? T : Vector2;
   }
 
   static equals(a: Vector2Like, b: Vector2Like) {
@@ -56,7 +61,6 @@ export class Vector2 implements Iterable<number>, Comparable {
     }
     a = Vector2.like(a);
     b = Vector2.like(b);
-    // eslint-disable-next-line eqeqeq
     return a.x == b.x && a.y == b.y;
   }
 
@@ -87,13 +91,16 @@ export class Vector2 implements Iterable<number>, Comparable {
     return Vector2.of(Math.log(+x) / nLog, Math.log(+y) / nLog);
   }
 
-  static pow<T extends Vector2Like | number>(a: T, b: T extends number ? Vector2Like : number) {
+  static pow<const T extends Vector2Like | number>(
+    a: T,
+    b: T extends number ? Vector2Like : number,
+  ) {
     if (typeof a === "number") {
       const { x, y } = Vector2.like(b as Vector2Like);
       return Vector2.of(a ** +x, a ** +y);
     } else {
       const { x, y } = Vector2.like(a);
-      return Vector2.of((+x) ** (b as number), (+y) ** (b as number));
+      return Vector2.of((+x) ** +b, (+y) ** +b);
     }
   }
 
@@ -119,7 +126,7 @@ export class Vector2 implements Iterable<number>, Comparable {
   }
 
   static angleBetweenDeg(a: Vector2Like, b: Vector2Like) {
-    return this.angleBetween(a, b) * 180 / Math.PI;
+    return this.angleBetween(a, b) / PiInDegree;
   }
 
   equals(val: Vector2Like) {
@@ -140,37 +147,50 @@ export class Vector2 implements Iterable<number>, Comparable {
     return Vector2.of(this.x - vec.x, this.y - vec.y);
   }
 
-  multiply<T extends Vector2Like | number = Vector2Like>(val: T): T extends Vector2Like ? number : Vector2 {
+  multiply<const T extends Vector2Like | number = Vector2Like>(
+    val: T,
+  ): T extends Vector2Like ? number : Vector2 {
     if (typeof val === "number") {
-      return Vector2.of(this.x * val, this.y * val) as T extends Vector2Like ? number : Vector2;
+      return Vector2.of(this.x * val, this.y * val) as T extends Vector2Like
+        ? number
+        : Vector2;
     }
     const _val = Vector2.like(val);
     return Vector2.dot(this, _val) as T extends Vector2Like ? number : Vector2;
-    //return this.x * _val.y + this.y * _val.x as T extends Vector2Like ? number : Vector2;
   }
 
   scale(factor: number | Vector2Like) {
-    const { x, y } = typeof factor === "object" ? Vector2.like(factor) : { x: factor, y: factor };
+    const { x, y } = typeof factor === "object"
+      ? Vector2.like(factor)
+      : { x: factor, y: factor };
     return Vector2.of(this.x * x, this.y * y);
   }
 
   divide(factor: number | Vector2Like) {
-    const { x, y } = typeof factor === "object" ? Vector2.like(factor) : { x: factor, y: factor };
+    const { x, y } = typeof factor === "object"
+      ? Vector2.like(factor)
+      : { x: factor, y: factor };
     return Vector2.of(this.x / x, this.y / y);
   }
 
   round(to: number | Vector2Like = 1) {
-    const { x, y } = typeof to === "number" ? { x: to, y: to } : Vector2.like(to);
+    const { x, y } = typeof to === "number"
+      ? { x: to, y: to }
+      : Vector2.like(to);
     return Vector2.of(round(this.x, +x), round(this.y, +y));
   }
 
   floor(to: number | Vector2Like = 1) {
-    const { x, y } = typeof to === "number" ? { x: to, y: to } : Vector2.like(to);
+    const { x, y } = typeof to === "number"
+      ? { x: to, y: to }
+      : Vector2.like(to);
     return Vector2.of(floor(this.x, +x), floor(this.y, +y));
   }
 
   ceil(to: number | Vector2Like = 1) {
-    const { x, y } = typeof to === "number" ? { x: to, y: to } : Vector2.like(to);
+    const { x, y } = typeof to === "number"
+      ? { x: to, y: to }
+      : Vector2.like(to);
     return Vector2.of(ceil(this.x, +x), ceil(this.y, +y));
   }
 
@@ -183,9 +203,13 @@ export class Vector2 implements Iterable<number>, Comparable {
     return this.x ** 2 + this.y ** 2;
   }
 
-  length<T extends number | void | null = void>(newLength?: T): T extends number ? Vector2 : number {
+  length<T extends number | void | null = void>(
+    newLength?: T,
+  ): T extends number ? Vector2 : number {
     const length = Math.hypot(this.x, this.y);
-    return (newLength == null ? length : this.scale(+newLength / length)) as T extends number ? Vector2 : number;
+    return (newLength == null
+      ? length
+      : this.scale(+newLength / length)) as T extends number ? Vector2 : number;
   }
 
   maxLength(maxLength: number) {
@@ -227,13 +251,18 @@ export class Vector2 implements Iterable<number>, Comparable {
     const targetVec = Vector2.from(target);
     const _delta = targetVec.minus(this);
     const deltaLen = _delta.length();
-    return deltaLen <= delta ? targetVec : this.plus(_delta.scale(delta / deltaLen));
+    return deltaLen <= delta
+      ? targetVec
+      : this.plus(_delta.scale(delta / deltaLen));
   }
 
-  clamp(min: Vector2Like, max: Vector2Like) {
-    min = Vector2.like(min);
-    max = Vector2.like(max);
-    return Vector2.of(clamp(+min.x, this.x, +max.x), clamp(+min.y, this.y, +max.y));
+  clamp(min: Vector2Like | number, max: Vector2Like | number) {
+    min = Vector2.like(typeof min === "number" ? [min, min] : min);
+    max = Vector2.like(typeof max === "number" ? [max, max] : max);
+    return Vector2.of(
+      clamp(+min.x, this.x, +max.x),
+      clamp(+min.y, this.y, +max.y),
+    );
   }
 
   abs() {
@@ -278,18 +307,57 @@ export class Vector2 implements Iterable<number>, Comparable {
     }
     return Vector2.of(this.x, y);
   }
+
+  validOrDefault(_default: Vector2Like = Vector2.ZERO) {
+    return this.hasNaN() ? Vector2.from(_default) : this;
+  }
+
+  swapXY() {
+    const { x, y } = this;
+    if (Object.is(x, y)) {
+      return this;
+    }
+    return Vector2.of(y, x);
+  }
+
+  getTan() {
+    return this.y / this.x;
+  }
+
+  getCotan() {
+    return this.x / this.y;
+  }
+
+  getSin() {
+    return this.y / this.length();
+  }
+
+  getCos() {
+    return this.x / this.length();
+  }
+
+  getSec() {
+    return this.length() / this.x;
+  }
+
+  getCosec() {
+    return this.length() / this.y;
+  }
 }
 
-export const useVector2 = (value: Vector2Like | number | `${number}`, onUpdate?: (value: Vector2) => void) => {
-  const ref = useRef() as React.MutableRefObject<Vector2>;
+export const useVector2 = (
+  value: Vector2Like | NumberProp,
+  onUpdate?: (value: Vector2) => void,
+) => {
+  const ref = useRef<Vector2>();
   if (typeof value === "number" || typeof value === "string") {
     value = Vector2.of(value, value);
   }
-  let tmp = ref.current;
+  const tmp = ref.current;
   if (tmp?.is(value)) {
     return tmp;
   }
-  tmp = ref.current = Vector2.from(value);
-  onUpdate && onUpdate(tmp);
-  return tmp;
-}
+  const result = ref.current = Vector2.from(value);
+  tmp && onUpdate && onUpdate(result);
+  return result;
+};

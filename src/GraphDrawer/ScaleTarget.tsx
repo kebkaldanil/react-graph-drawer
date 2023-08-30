@@ -1,10 +1,11 @@
 import { useContext, useEffect } from "react";
 import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
 import DrawerContext from "./DrawerContext";
+import { NumberProp } from "../utils/number";
 
 interface ScaleTargetProps {
-  value: Vector2Like | number | `${number}`;
-  animationTime?: number | `${number}`;
+  value: Vector2Like | NumberProp;
+  animationTime?: NumberProp;
   noLogarithmicScale?: boolean;
 }
 
@@ -24,9 +25,12 @@ const ScaleTarget = (props: ScaleTargetProps) => {
     }
     let scaleTargetLog: Vector2;
     if (noLogarithmicScale) {
-      speed = scaleTarget.minus(drawerContext.getScale()).length() / +animationTime;
+      speed = scaleTarget.minus(drawerContext.getScale()).length() /
+        +animationTime;
     } else {
-      speed = Vector2.log(scaleTarget.divide(drawerContext.getScale())).length() / +animationTime;
+      speed =
+        Vector2.log(scaleTarget.divide(drawerContext.getScale())).length() /
+        +animationTime;
       scaleTargetLog = Vector2.log(scaleTarget);
     }
     const drawable = drawerContext.addDrawable((drawableContext, deltaTime) => {
@@ -36,11 +40,11 @@ const ScaleTarget = (props: ScaleTargetProps) => {
       } = drawableContext.drawerContext;
       const scale = getScale();
       const scaleChanged = setScale(
-        noLogarithmicScale ?
-          scale.moveTo(scaleTarget, deltaTime * speed) :
-          Vector2.exp(
-            Vector2.log(scale).moveTo(scaleTargetLog, deltaTime * speed)
-          )
+        noLogarithmicScale
+          ? scale.moveTo(scaleTarget, deltaTime * speed)
+          : Vector2.exp(
+            Vector2.log(scale).moveTo(scaleTargetLog, deltaTime * speed),
+          ),
       );
       if (!scaleChanged) {
         drawable.remove();
