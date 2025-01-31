@@ -48,7 +48,7 @@ export function FunctionGraphsFromStorage() {
   }, [context]);
   return Object.entries(state).map(([id, data]) => {
     try {
-      const func = new Function(`with (Math) { return (${data!.func}); }`)();
+      const func = new Function(`with(Math){return x=>{try{return(${data!.func})(x)}catch{}}}`)();
       if (typeof func === "function") {
         return <FunctionGraph key={id} color={data!.color} func={func} />;
       }

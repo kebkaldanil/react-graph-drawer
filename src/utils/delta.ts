@@ -17,16 +17,15 @@ export const useDelta = (
 ) => {
   const lastTimeMs = useRef<number | null>(null);
   return useMemo(() => ({
-    get: () => {
-      const timeMs = Date.now();
+    get: (time: number) => {
       const delta = lastTimeMs.current === null
         ? _defaultDelta
-        : Math.min((timeMs - lastTimeMs.current) / 1000, _maxDelta);
-      lastTimeMs.current = timeMs;
+        : Math.min((time - lastTimeMs.current) / 1000, _maxDelta);
+      lastTimeMs.current = time;
       return delta;
     },
-    reset: () => {
-      lastTimeMs.current = null;
+    reset: (time?: number | null) => {
+      lastTimeMs.current = time ?? null;
     },
   }), [_defaultDelta, _maxDelta]);
 };

@@ -47,7 +47,6 @@ interface MainGraphDrawerProps {
    * Warning: might be null
    */
   ref?: React.Ref<DrawerContext>;
-  updatePeriodMs?: number;
 }
 
 interface GraphDrawerState {
@@ -65,11 +64,10 @@ const GraphDrawer = forwardRef(
       size: sizeProp = Vector2.NaV,
       focus: initialFocus = Vector2.ZERO,
       scale: initialScale = 10,
-      updatePeriodMs = 16,
       ...rest
     } = props;
 
-    const delta = useDelta(updatePeriodMs / 1000);
+    const delta = useDelta();
     const forceUpdate = useUpdate();
     const stateRef = useRef() as React.MutableRefObject<GraphDrawerState>;
     const doUpdateRef = useRef(true);
@@ -145,20 +143,24 @@ const GraphDrawer = forwardRef(
 
     useEffect(() => {
       if (context) {
-        const interval = setInterval(() => {
+        let id = 0;
+        const makeUpdateRequest = () => id = requestAnimationFrame((time) => {
           if (doUpdateRef.current) {
             doUpdateRef.current = false;
             context.update({
               ...stateRef.current,
-              deltaTime: delta.get(),
+              deltaTime: delta.get(time),
             });
           } else {
-            delta.reset();
+            delta.reset(time);
           }
-        }, updatePeriodMs);
-        return () => clearInterval(interval);
+          makeUpdateRequest();
+        });
+        makeUpdateRequest();
+        delta.reset(null);
+        return () => cancelAnimationFrame(id);
       }
-    }, [context, delta, updatePeriodMs]);
+    }, [context, delta]);
     const { size } = stateRef.current;
     return (
       <canvas ref={canvasRefFunc} width={size.x} height={size.y} {...rest}>
