@@ -1,40 +1,46 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useLayoutEffect, useRef } from "react";
 import "./FunctionInputs.css";
-import { Dict } from "kamikoto00lib";
-import { DrawableContextColor, FunctionGraph } from ".";
-import { createFunctionsStorageContext } from "./createFunctionsStorageContext";
-
-export interface FunctionData {
-  func: string;
-  color?: DrawableContextColor;
-}
-
-export interface FunctionsStorageContext {
-  readonly state: Dict<FunctionData>;
-  updateFunctionRecord(id: string, data: Partial<FunctionData>): void;
-  removeFunctionRecord(id: string): void;
-  onUpdate(cb: (state: Dict<FunctionData>) => void): () => void;
-  nextId(): string;
-}
-
-export const FunctionsStorageContext = React.createContext<
-  FunctionsStorageContext
->(createFunctionsStorageContext());
+import { FunctionGraph, num2color, tryColor2num, useUpdate } from ".";
+import { FunctionsStorage, FunctionsStorageContext } from "./FunctionsStorageContext";
+import { GraphDrawerDataLoader, type GraphDrawerData } from "./GraphDrawerDataLoader";
 
 export interface FunctionsStorageProps {
   children: React.ReactNode;
-  defaultData?: Dict<FunctionData>;
-  localStorageKey?: string;
 }
-export const FunctionsStorage = (props: FunctionsStorageProps) => {
+
+export const FunctionsStorageAuto = (props: FunctionsStorageProps) => {
   const {
     children,
-    defaultData,
-    localStorageKey,
   } = props;
-  const context = createFunctionsStorageContext(defaultData, localStorageKey);
+  const context = useRef(new FunctionsStorage());
+  useLayoutEffect(() => {
+    const dataSrc = GraphDrawerDataLoader.getAuto();
+    if (dataSrc instanceof Promise) {
+      dataSrc.then(data => {
+        GraphDrawerDataLoader.data2context(data, context.current);
+        GraphDrawerDataLoader.setContextSave(context.current);
+      });
+    } else if (dataSrc) {
+      GraphDrawerDataLoader.data2context(dataSrc, context.current);
+      GraphDrawerDataLoader.setContextSave(context.current);
+    } else {
+      const data: GraphDrawerData = {
+        version: 1,
+        functions: [
+          {
+            src: "x => x * x",
+            color: 0xff0000,
+          }
+        ],
+      };
+      GraphDrawerDataLoader.writeUrl(data);
+      GraphDrawerDataLoader.data2context(data, context.current);
+      GraphDrawerDataLoader.setContextSave(context.current);
+    }
+    context.current.triggerUpdate();
+  }, []);
   return (
-    <FunctionsStorageContext.Provider value={context}>
+    <FunctionsStorageContext.Provider value={context.current}>
       {children}
     </FunctionsStorageContext.Provider>
   );
@@ -42,50 +48,56 @@ export const FunctionsStorage = (props: FunctionsStorageProps) => {
 
 export function FunctionGraphsFromStorage() {
   const context = useContext(FunctionsStorageContext);
-  const [state, setState] = useState(context.state);
-  useEffect(() => {
-    return context.onUpdate(setState);
-  }, [context]);
-  return Object.entries(state).map(([id, data]) => {
+  const update = useUpdate();
+  useLayoutEffect(() => {
+    const removeUpdate = context.onUpdate(update);
+    return () => {
+      removeUpdate();
+    };
+  }, []);
+  return Object.entries(context.state).map(([id, data]) => {
     try {
-      const func = new Function(`with(Math){return x=>{try{return(${data!.func})(x)}catch{}}}`)();
+      const func = new Function(`with(Math){return x=>{try{return(${data.func})(x)}catch{}}}`)();
       if (typeof func === "function") {
-        return <FunctionGraph key={id} color={data!.color} func={func} />;
+        return <FunctionGraph key={id} color={num2color(data.color)} func={func} />;
       }
-    } catch { /* empty */ }
+    } catch { }
     return null;
   });
 }
 
 function FunctionInputs() {
   const context = useContext(FunctionsStorageContext);
-  const [state, setState] = useState(context.state);
-  useEffect(() => {
-    return context.onUpdate(setState);
-  }, [context]);
-  const inputs = Object.keys(state).map((id) => {
+  const update = useUpdate();
+  useLayoutEffect(() => {
+    const removeUpdate = context.onUpdate(update);
+    return () => {
+      removeUpdate();
+    };
+  }, []);
+  const inputs = Object.keys(context.state).map((id) => {
     const onEdit: React.FormEventHandler<HTMLInputElement> = (ev) => {
       const el = ev.target as HTMLInputElement;
       context.updateFunctionRecord(id, { func: el.value });
     };
     const onColorChange: React.FormEventHandler<HTMLInputElement> = (ev) => {
       const el = ev.target as HTMLInputElement;
-      context.updateFunctionRecord(id, { color: el.value });
+      context.updateFunctionRecord(id, { color: tryColor2num(el.value) });
     };
     return (
       <div key={id} className="function-input-form">
-        <input type="text" onInput={onEdit} value={state[id]!.func} />
+        <input type="text" onInput={onEdit} value={context.state[id].func} />
         <input
           type="color"
           onInput={onColorChange}
-          value={state[id]!.color as string || undefined}
+          value={num2color(context.state[id].color)}
         />
-        <button onClick={context.removeFunctionRecord.bind(null, id)}>-</button>
+        <button onClick={context.removeFunctionRecord.bind(context, id)}>-</button>
       </div>
     );
   });
   const addInput = () => {
-    context.updateFunctionRecord(context.nextId(), { func: "" });
+    context.updateFunctionRecord(context.nextId(), {});
   };
   return (
     <div className="function-inputs">

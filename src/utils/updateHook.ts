@@ -1,6 +1,6 @@
 import { useState } from "react";
 
 export const useUpdate = () => {
-  const [, s] = useState(true);
-  return () => s((p) => !p);
+  const [, s] = useState(0);
+  return () => s(p => p + 1 & 0xffff);
 };

@@ -1,8 +1,8 @@
 import { useContext, useEffect } from "react";
-import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
-import { DrawableContext } from "./Drawable";
+import { useVector2, Vector2, type Vector2Like } from "../utils/Vector2";
+import type { DrawableContext } from "./Drawable";
 import DrawerContext from "./DrawerContext";
-import { NumberProp } from "../utils/number";
+import type { NumberProp } from "../utils/number";
 
 export type WheelControlProps =
   & {

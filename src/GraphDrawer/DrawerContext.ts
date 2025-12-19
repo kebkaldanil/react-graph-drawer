@@ -1,16 +1,16 @@
 import React, { useLayoutEffect } from "react";
 import { atSameSide, Direction } from "../utils/Direction";
 import { LineSegment } from "../utils/LineSegment";
-import { Vector2, Vector2Like } from "../utils/Vector2";
+import { Vector2, type Vector2Like } from "../utils/Vector2";
 import { ZeroAngleRect } from "../utils/ZeroAngleRect";
-import {
+import type {
   Drawable,
   DrawableContext,
   DrawableContextColor,
   PrintTextOptions,
 } from "./Drawable";
-import { primitive } from "kamikoto00lib";
-import { NumberProp } from "../utils/number";
+import type { primitive } from "kamikoto00lib";
+import type { NumberProp } from "../utils/number";
 
 interface DrawerData {
   focus: Vector2;

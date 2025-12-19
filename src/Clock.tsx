@@ -1,8 +1,7 @@
 import { useContext } from "react";
 import {
-  BaseDrawableProps,
+  type BaseDrawableProps,
   DrawerContext,
-  makeArray,
   PI,
   PiInDegree,
   Vector2,
@@ -26,8 +25,8 @@ function Clock(props: ClockProps) {
     const seconds_fi = seconds * PI / 30;
     const { setColor, drawLine } = drawableContext;
     setColor("black");
-    drawLine([[0, 0], Vector2.fromAngle(hours_fi, 0.5)]);
-    drawLine(makeArray(361, (i) => Vector2.fromAngle(i * PiInDegree, 1.2)));
+    drawLine([Vector2.of(0, 0), Vector2.fromAngle(hours_fi, 0.5)]);
+    drawLine(Array.from({ length: 361 }, (_, i) => Vector2.fromAngle(i * PiInDegree, 1.2)));
     setColor("gray");
     drawLine([Vector2.of(0, 0), Vector2.fromAngle(minutes_fi, 0.75)]);
     setColor("red");

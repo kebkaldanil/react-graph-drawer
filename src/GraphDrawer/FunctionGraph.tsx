@@ -1,10 +1,9 @@
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { BaseDrawableProps } from "./Drawable";
-import { DrawableContext, DrawableContextColor } from "./Drawable";
+import type { BaseDrawableProps, DrawableContext, DrawableContextColor } from "./Drawable";
 import DrawerContext, { defaultPriority } from "./DrawerContext";
-import { alwaysArray } from "../utils/makeArray";
-import { moveNumberClosestToTargetByStep, NumberProp } from "../utils/number";
+import { alwaysArray } from "../utils/array";
+import { moveNumberClosestToTargetByStep, type NumberProp } from "../utils/number";
 
 export type SimpleFunction = (x: number) => number;
 export type MultipleResultFunction = (x: number) => number[];
@@ -50,9 +49,8 @@ function FunctionGraph(props: FunctionGraphProps) {
       if (curx === x) {
         xp++;
       }
-      //after this check we are sure smartStep is not null (cause nextSmart is not NaN)
       if (nextSmart === x) {
-        nextSmart += smartStep!;
+        nextSmart += smartStep;
       }
       const ys = alwaysArray(func(x));
       while (points.length < ys.length) {

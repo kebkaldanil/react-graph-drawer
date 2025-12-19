@@ -1,7 +1,7 @@
-import { ceil, clamp, floor, Like, round, Tuple } from "kamikoto00lib";
+import { ceil, clamp, floor, type Like, round, type Tuple } from "kamikoto00lib";
 import { useRef } from "react";
-import { Comparable } from "./Comparable";
-import { NumberProp, PiInDegree } from "./number";
+import type { Comparable } from "./Comparable";
+import { type NumberProp, PiInDegree } from "./number";
 
 export type Vector2Like = Readonly<Like<Vector2>> | [number, number];
 
@@ -281,9 +281,9 @@ export class Vector2 implements Iterable<number>, Comparable {
     return [this.x, this.y];
   }
 
-  *[Symbol.iterator](): Generator<number, number, void> {
+  *[Symbol.iterator](): Generator<number, void, void> {
     yield this.x;
-    return this.y;
+    yield this.y;
   }
 
   get [0]() {
@@ -349,7 +349,7 @@ export const useVector2 = (
   value: Vector2Like | NumberProp,
   onUpdate?: (value: Vector2) => void,
 ) => {
-  const ref = useRef<Vector2>();
+  const ref = useRef<Vector2>(null);
   if (typeof value === "number" || typeof value === "string") {
     value = Vector2.of(value, value);
   }

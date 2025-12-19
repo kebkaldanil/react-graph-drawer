@@ -1,4 +1,4 @@
-import { Dict, If, IsNotNegative } from "kamikoto00lib";
+import type { Dict, If, IsNotNegative } from "kamikoto00lib";
 
 export interface Comparable {
   equals(b: this): boolean;

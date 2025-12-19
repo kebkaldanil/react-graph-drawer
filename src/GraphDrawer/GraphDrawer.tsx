@@ -1,6 +1,6 @@
 import React, {
   forwardRef,
-  ReactNode,
+  type ReactNode,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -9,9 +9,9 @@ import React, {
 } from "react";
 import { useDelta } from "../utils/delta";
 import { useUpdate } from "../utils/updateHook";
-import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
+import { useVector2, Vector2, type Vector2Like } from "../utils/Vector2";
 import DrawerContext, { initContext } from "./DrawerContext";
-import { NumberProp } from "../utils/number";
+import type { NumberProp } from "../utils/number";
 
 type CanvasProps = React.DetailedHTMLProps<
   React.CanvasHTMLAttributes<HTMLCanvasElement>,
@@ -69,7 +69,7 @@ const GraphDrawer = forwardRef(
 
     const delta = useDelta();
     const forceUpdate = useUpdate();
-    const stateRef = useRef() as React.MutableRefObject<GraphDrawerState>;
+    const stateRef = useRef<GraphDrawerState>(null);
     const doUpdateRef = useRef(true);
     const [context, setContext] = useState<DrawerContext>();
     const sizeTarget = useVector2(
@@ -96,7 +96,7 @@ const GraphDrawer = forwardRef(
         canvasRenderingContext2D &&
         context?.canvasRenderingContext2D !== canvasRenderingContext2D
       ) {
-        const state = stateRef.current;
+        const state = stateRef.current!;
         const context = initContext({
           canvasRenderingContext2D,
           getScale: () => state.scale,
@@ -135,7 +135,7 @@ const GraphDrawer = forwardRef(
     doUpdateRef.current = true;
 
     useLayoutEffect(() => {
-      stateRef.current.size = sizeTarget;
+      stateRef.current!.size = sizeTarget;
       if (context) {
         context.onSizeUpdate(sizeTarget);
       }
@@ -148,7 +148,7 @@ const GraphDrawer = forwardRef(
           if (doUpdateRef.current) {
             doUpdateRef.current = false;
             context.update({
-              ...stateRef.current,
+              ...stateRef.current!,
               deltaTime: delta.get(time),
             });
           } else {

@@ -10,21 +10,13 @@ import {
 import "./App.css";
 import FunctionInputs, {
   FunctionGraphsFromStorage,
-  FunctionsStorage,
+  FunctionsStorageAuto,
 } from "./FunctionInputs";
-
-const defaultData = {
-  0: { func: "x => sin(x)", color: "#ff0000" },
-  1: { func: "x => x", color: "#000000" },
-};
 
 function App() {
   return (
     <div className="App">
-      <FunctionsStorage
-        defaultData={defaultData}
-        localStorageKey="functions data"
-      >
+      <FunctionsStorageAuto>
         <GraphDrawer
           size={[300, 100]}
           focus={[0, 0]}
@@ -40,7 +32,7 @@ function App() {
           <AutoSize />
         </GraphDrawer>
         <FunctionInputs />
-      </FunctionsStorage>
+      </FunctionsStorageAuto>
     </div>
   );
 }

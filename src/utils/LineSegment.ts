@@ -1,7 +1,7 @@
 import { Direction, horisontalOnly, verticalOnly } from "./Direction";
-import { Like } from "kamikoto00lib";
-import { Vector2, Vector2Like } from "./Vector2";
-import { ZeroAngleRect, ZeroAngleRectLike } from "./ZeroAngleRect";
+import type { Like, Tuple } from "kamikoto00lib";
+import { Vector2, type Vector2Like } from "./Vector2";
+import { ZeroAngleRect, type ZeroAngleRectLike } from "./ZeroAngleRect";
 
 export type LineSegmentLike = Like<LineSegment> | [Vector2Like, Vector2Like];
 
@@ -91,7 +91,7 @@ export class LineSegment {
     return LineSegment.of(p1, p2);
   }
 
-  toArray() {
+  toArray(): Tuple<2, Vector2> {
     return [this.p1, this.p2];
   }
 

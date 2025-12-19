@@ -1,6 +1,6 @@
-import { If, IsNotNegative, Like } from "kamikoto00lib";
+import type { If, IsNotNegative, Like } from "kamikoto00lib";
 import { Direction } from "./Direction";
-import { Vector2, Vector2Like } from "./Vector2";
+import { Vector2, type Vector2Like } from "./Vector2";
 import { areClose } from "./Comparable";
 
 export type ZeroAngleRectLike = Like<ZeroAngleRect>;

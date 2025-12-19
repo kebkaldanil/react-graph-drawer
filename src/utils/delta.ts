@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { If, IsNotNegative } from "kamikoto00lib";
+import type { If, IsNotNegative } from "kamikoto00lib";
 
 export let defaultDelta = 0.017;
 export let defaultMaxDelta = 1;

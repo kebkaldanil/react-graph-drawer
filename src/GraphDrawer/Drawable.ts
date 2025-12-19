@@ -1,8 +1,8 @@
-import { Tuple } from "kamikoto00lib";
-import { Vector2, Vector2Like } from "../utils/Vector2";
+import type { Tuple } from "kamikoto00lib";
+import { Vector2, type Vector2Like } from "../utils/Vector2";
 import { ZeroAngleRect } from "../utils/ZeroAngleRect";
 import DrawerContext from "./DrawerContext";
-import { NumberProp } from "../utils/number";
+import type { NumberProp } from "../utils/number";
 
 export interface BaseDrawableProps {
   priority?: NumberProp;

@@ -1,16 +1,16 @@
 import { useCallback, useContext } from "react";
-import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
-import {
+import { useVector2, Vector2, type Vector2Like } from "../utils/Vector2";
+import type {
   BaseDrawableProps,
   ComputedProp,
   DrawableContextColor,
 } from "./Drawable";
 import DrawerContext, {
   defaultPriority,
-  DrawableCallback,
+  type DrawableCallback,
 } from "./DrawerContext";
-import { SimpleFunction } from "./FunctionGraph";
-import { halfPI, NumberProp, PiInDegree, twoPI } from "../utils/number";
+import type { SimpleFunction } from "./FunctionGraph";
+import { halfPI, type NumberProp, PiInDegree, twoPI } from "../utils/number";
 
 interface PolarGraphProps extends BaseDrawableProps {
   color?: DrawableContextColor;

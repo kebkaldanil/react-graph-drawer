@@ -1,13 +1,13 @@
 import { useCallback, useContext } from "react";
 import { Vector2 } from "../utils/Vector2";
-import { BaseDrawableProps } from "./Drawable";
-import { ComputedProp, DrawableContextColor } from "./Drawable";
+import type { BaseDrawableProps } from "./Drawable";
+import type { ComputedProp, DrawableContextColor } from "./Drawable";
 import DrawerContext, {
   defaultPriority,
-  DrawableCallback,
+  type DrawableCallback,
 } from "./DrawerContext";
-import { SimpleFunction } from "./FunctionGraph";
-import { NumberProp } from "../utils/number";
+import type { SimpleFunction } from "./FunctionGraph";
+import type { NumberProp } from "../utils/number";
 
 interface LineGraphByTwoFunctionsPropsBase extends BaseDrawableProps {
   x: SimpleFunction;

@@ -1,4 +1,4 @@
-import { uint } from "kamikoto00lib";
+import type { uint } from "kamikoto00lib";
 import { areEqual } from "./Comparable";
 
 export const memoizeFunction = <A extends unknown[], R>(

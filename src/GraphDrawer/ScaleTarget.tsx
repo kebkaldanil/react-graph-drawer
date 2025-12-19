@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
-import { useVector2, Vector2, Vector2Like } from "../utils/Vector2";
+import { useVector2, Vector2, type Vector2Like } from "../utils/Vector2";
 import DrawerContext from "./DrawerContext";
-import { NumberProp } from "../utils/number";
+import type { NumberProp } from "../utils/number";
 
 interface ScaleTargetProps {
   value: Vector2Like | NumberProp;
