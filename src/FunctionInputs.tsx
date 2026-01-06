@@ -14,7 +14,12 @@ export const FunctionsStorageAuto = (props: FunctionsStorageProps) => {
   } = props;
   const context = useRef(new FunctionsStorage());
   useLayoutEffect(() => {
-    const dataSrc = GraphDrawerDataLoader.getAuto();
+    let dataSrc: GraphDrawerData | Promise<GraphDrawerData> | undefined;
+    try {
+      dataSrc = GraphDrawerDataLoader.getAuto();
+    } catch (e) {
+      console.error(e);
+    }
     if (dataSrc instanceof Promise) {
       dataSrc.then(data => {
         GraphDrawerDataLoader.data2context(data, context.current);
@@ -33,9 +38,15 @@ export const FunctionsStorageAuto = (props: FunctionsStorageProps) => {
           }
         ],
       };
-      GraphDrawerDataLoader.writeUrl(data);
       GraphDrawerDataLoader.data2context(data, context.current);
-      GraphDrawerDataLoader.setContextSave(context.current);
+      context.current.triggerUpdate();
+      const unsub = context.current.onUpdate((ctx) => {
+        unsub();
+        const data = GraphDrawerDataLoader.context2data(ctx);
+        GraphDrawerDataLoader.writeUrl(data);
+        GraphDrawerDataLoader.setContextSave(ctx);
+      });
+      return unsub;
     }
     context.current.triggerUpdate();
   }, []);

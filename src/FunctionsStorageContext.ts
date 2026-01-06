@@ -15,6 +15,7 @@ export class FunctionsStorage {
     for (const cb of this._onUpdate) {
       cb.call(this, this);
     }
+    this.trySave();
   }
 
   clear(subscriptions = true) {

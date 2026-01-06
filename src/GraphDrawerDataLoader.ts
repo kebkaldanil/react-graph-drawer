@@ -56,26 +56,6 @@ export class GraphDrawerDataLoader {
         return this.validateData(await r.json());
     }
 
-    static tryGetLegacyAndMigrate() {
-        const oldDataSrc = localStorage.getItem("functions data");
-        if (oldDataSrc) {
-            try {
-                const oldData = JSON.parse(oldDataSrc);
-                if (Array.isArray(oldData) && oldData.every(fd => fd && typeof fd === "object" && typeof fd.src === "string")) {
-                    const data: GraphDrawerData = {
-                        version: 1,
-                        functions: oldData.map(({ src, color }) => ({ src, color: color || "black" })),
-                    };
-                    localStorage.removeItem("functions data");
-                    this.writeUrl(data);
-                    return data;
-                }
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-    }
-
     static getAuto() {
         const sp = new URLSearchParams(location.search);
         switch (sp.get("type")) {
@@ -100,8 +80,6 @@ export class GraphDrawerDataLoader {
                 }
                 return this.getFromRemoteApi(url);
             }
-            default:
-                return this.tryGetLegacyAndMigrate();
         }
     }
 
@@ -142,9 +120,6 @@ export class GraphDrawerDataLoader {
                 break;
         }
         context.setSave(cb);
-        if (cb) {
-            return context.onUpdate(context => context.trySave());
-        }
     }
 
     static getDummy(): GraphDrawerData {
